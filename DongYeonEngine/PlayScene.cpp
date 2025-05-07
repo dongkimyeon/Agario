@@ -91,17 +91,19 @@ void PlayScene::Update()
 {
     
 
-    //플레이어 <-> 먹이 충돌체크
-    RECT playerTempRect = player.GetRect();   
+    // 플레이어 <-> 음식 충돌 체크 (원 기반)
     for (auto it = foods.begin(); it != foods.end();)
     {
-        RECT foodTempRect = it->GetRect();
-        
-        
-        RECT temp;
-        if (IntersectRect(&temp, &playerTempRect, &foodTempRect))
+        // 중심점 간 거리 계산
+        float dx = player.GetPositionX() - it->GetPositionX();
+        float dy = player.GetPositionY() - it->GetPositionY();
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        // 반지름 합과 비교
+        float radiusSum = player.GetRadius() + it->GetRadius();
+        if (distance <= radiusSum)
         {
-            float deltaRadius = player.GetRadius() + (it->GetRadius()/4);
+            float deltaRadius = player.GetRadius() + (it->GetRadius() / 4);
             player.Setradius(deltaRadius);
             it = foods.erase(it); // 충돌한 음식 제거
             std::cout << player.GetRadius() << std::endl;
@@ -111,6 +113,7 @@ void PlayScene::Update()
             ++it;
         }
     }
+
     //적 <-> 먹이 충돌체크 
     //플레이어 업데이트
     player.Update();
