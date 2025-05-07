@@ -102,7 +102,14 @@ void Player::Render(HDC hdc)
 	graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
 }
 
+void Player::SetPosition(float x, float y)
+{
+	mX = x;
+	mY = y;
+	position.x = x;
+	position.y = y;
 
+}
 
 float Player::GetPositionX()
 {

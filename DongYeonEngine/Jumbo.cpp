@@ -58,7 +58,12 @@ void Jumbo::Render(HDC hdc)
     graphics.DrawPolygon(&pen, (Gdiplus::Point*)points, 3);
 }
 
+void Jumbo::SetPosition(float x, float y)
+{
+	mX = x;
+	mY = y;
 
+}
 
 
 

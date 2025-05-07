@@ -49,6 +49,12 @@ void Trap::Render(HDC hdc)
 	graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
 }
 
+void Trap::SetPosition(float x, float y)
+{
+	mX = x;
+	mY = y;
+
+}
 
 float Trap::GetPositionX()
 {

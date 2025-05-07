@@ -49,7 +49,12 @@ void Food::Render(HDC hdc)
 	graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
 }
 
+void Food::SetPosition(float x, float y)
+{
+	mX = x;
+	mY = y;
 
+}
 
 float Food::GetPositionX()
 {

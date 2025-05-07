@@ -226,7 +226,7 @@ void PlayScene::Update()
     //적 업데이트
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
-        it->Update(foods);
+        it->Update();
     }
 
     //트랩 업데이트
@@ -240,6 +240,8 @@ void PlayScene::Update()
     {
         it->Update();
     }
+
+    camera.Update(&player);
 }
 
 void PlayScene::LateUpdate()
@@ -278,6 +280,7 @@ void PlayScene::Render(HDC hdc)
     {
         it->Render(hdc);
     }
+    camera.Render(hdc);
 
     // 마우스 좌표 출력
     WCHAR Text[100];
