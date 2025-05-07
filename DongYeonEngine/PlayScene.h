@@ -15,7 +15,7 @@ private:
     std::vector<Trap> traps;
     std::vector<Jumbo> jumbos;
     std::vector<Player> player;
-    
+    float PlayTime;
 
 public:
     PlayScene();

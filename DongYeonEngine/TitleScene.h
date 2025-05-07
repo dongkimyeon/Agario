@@ -14,7 +14,8 @@ public:
 
 private:
     Gdiplus::Image* mBackgroundImage;
-    Gdiplus::Image* mLogoImage;
+    float mAlphaTimer;
+	RECT startButton; 
     ULONG_PTR mGdiplusToken;         // GDI+ ÅäÅ«
 
 };

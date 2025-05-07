@@ -4,76 +4,38 @@
 class Player : public GameObject
 {
 public:
-	Player();
-	void Update() override;
-	void LateUpdate() override;
-	void Render(HDC hdc) override;
+    Player();
+    void Update() override;
+    void LateUpdate() override;
+    void Render(HDC hdc) override;
 
-	
-	void SetPosition(float x, float y) override
-	{
-		mX = x;
-		mY = y;
-	}
-	void Setradius(float r) override
-	{
-		float oldRadius = radius;
-		float deltaRadius = r - oldRadius; // 델타 값 계산
+    void SetPosition(float x, float y) override { mX = x; mY = y; }
+    void Setradius(float r);
+    void SetSpeed(float s) override { speed = s; }
+    void SetColor(COLORREF c) override { color = c; }
+    float GetPositionX() override { return mX; }
+    float GetPositionY() override { return mY; }
+    float GetSpeed() override { return speed; }
+    COLORREF GetColor() override { return color; }
+    float GetRadius() override { return radius; }
+    RECT GetRect() override { return rect; }
 
-		if (deltaRadius < 0) // 반지름이 작아지면
-		{
-			speed += 2.5f; // 기존 로직 유지
-		}
-		else if (deltaRadius > 0) // 반지름이 커지면
-		{
-			// 델타 값에 비례하여 속도 감소 (음식 반지름에 간접적으로 비례)
-			float speedReduction = deltaRadius * 1.1f; // 델타 값의 2배로 감소
-			speed -= speedReduction;
+    void OnSplit() { isSplit = true; timeSinceSplit = 0.0f; }
 
-			// 최소 속도 제한
-			if (speed < 15.0f)
-			{
-				speed = 15.0f;
-			}
-		}
-
-		// 반지름 업데이트
-		radius = r;
-	}
-	void SetSpeed(float s) override
-	{
-		speed = s;
-	}
-	void SetColor(COLORREF c) override
-	{
-		color = c;
-	}
-	float GetPositionX() override;
-	float GetPositionY() override;
-	float GetSpeed() override;
-	COLORREF GetColor() override;
-	float GetRadius() override;
-	RECT GetRect() override;
-	
-	void OnSplit()
-	{
-		isSplit = true;
-		timeSinceSplit = 0;
-	}
-	
 private:
-	float mX;
-	float mY;
-	float radius;
-	float speed;
-	RECT rect;
-	COLORREF color;
-	float timeSinceSplit; // 분열 후 경과 시간
-	bool isSplit; // 분열 상태인지 여부
-	float boostTime = 0.7f; // 속도 변화 지속 시간
-	float oldSpeed; //원래 속도 저장
-	
+    float mX;
+    float mY;
+    float radius;
+    float speed;
+    RECT rect;
+    COLORREF color;
+    float timeSinceSplit; // 분열 후 경과 시간
+    bool isSplit; // 분열 상태인지 여부
+    float boostTime = 0.5f; // 속도 부스트 지속 시간
 
-
+    // 속도 계산용 상수
+    static constexpr float BASE_RADIUS = 30.0f; // 기준 반지름
+    static constexpr float BASE_SPEED = 80.0f; // 기준 속도
+    static constexpr float MIN_SPEED = 25.0f; // 최소 속도
+    static constexpr float MAX_SPEED = 150.0f; // 최대 속도
 };
-

@@ -10,5 +10,6 @@
 #include <objidl.h>
 #include <gdiplus.h>
 #include <random>
+#include <cmath>
 
 #pragma comment(lib, "gdiplus.lib")

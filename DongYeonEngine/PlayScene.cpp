@@ -16,7 +16,7 @@ std::random_device rd;
 
 PlayScene::PlayScene()
 {
-
+	PlayTime = 0.0f;
     // 음식 객체 초기화
     for (int i = 0; i < FOOD_SIZE; ++i)
     {
@@ -68,7 +68,8 @@ void PlayScene::Initialize()
 
 void PlayScene::Update()
 {
-    static std::vector<std::tuple<size_t, float, float>> splitPlayers;
+    // 플레이타임 갱신
+    PlayTime += Time::DeltaTime();
 
     // 플레이어 <-> 음식 충돌 체크 (원 기반)
     for (auto it = player.begin(); it != player.end();)
@@ -84,7 +85,7 @@ void PlayScene::Update()
             float radiusSum = jt->GetRadius() + it->GetRadius();
             if (distance <= radiusSum)
             {
-                float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
+                float deltaRadius = it->GetRadius() + (jt->GetRadius()/4);
                 it->Setradius(deltaRadius);
                 jt = foods.erase(jt); // 충돌한 음식 제거
 
@@ -113,7 +114,7 @@ void PlayScene::Update()
             float radiusSum = jt->GetRadius() + it->GetRadius();
             if (distance <= radiusSum)
             {
-                float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
+                float deltaRadius = it->GetRadius() + (jt->GetRadius()/4);
                 it->Setradius(deltaRadius);
                 jt = foods.erase(jt); // 충돌한 음식 제거
                
@@ -135,6 +136,7 @@ void PlayScene::Update()
         foods.push_back(obj);
     }
 
+    
     // 플레이어 분열
     if (Input::GetKeyDown(eKeyCode::LButton) && !player.empty()) {
         POINT mousePos;
@@ -145,16 +147,18 @@ void PlayScene::Update()
 
         for (auto it = player.begin(); it != player.end(); ++it) {
             float radius = it->GetRadius();
+
+            // 최소 분열 반지름 25
             if (radius < 25.0f) {
                 continue;
             }
 
-            float newRadius = radius / 2.0f;
-            it->Setradius(newRadius);
+            float newRadius = radius / 2.0f; // 반지름 반으로
+            it->Setradius(newRadius); // 기존 플레이어 반지름 설정 (속도 자동 계산)
 
             Player newPlayer;
-            newPlayer.Setradius(newRadius);
-  
+            newPlayer.Setradius(newRadius); // 새 플레이어 반지름 설정 (속도 자동 계산)
+            newPlayer.SetColor(it->GetColor()); // 색상 복사
             newPlayer.OnSplit(); // 분열 상태 활성화
 
             float x = it->GetPositionX();
@@ -180,11 +184,56 @@ void PlayScene::Update()
         for (auto& newPlayer : newPlayers) {
             player.push_back(newPlayer);
         }
-        
+    }
+    // 적 분열
+    std::vector<Enemy> newEnemies;
+    for (auto it = enemys.begin(); it != enemys.end(); ++it)
+    {
+        if (it->GetRadius() > 70.0f)
+        {
+            float radius = it->GetRadius();
+
+            if (radius < 25.0f) {
+                continue;
+            }
+
+            float newRadius = radius / 2.0f;
+            it->Setradius(newRadius);
+
+            Enemy newEnemy;
+            newEnemy.Setradius(newRadius);
+            newEnemy.SetColor(it->GetColor());
+            newEnemy.OnSplit();
+
+            float x = it->GetPositionX();
+            float y = it->GetPositionY();
+
+            // 기존 적의 방향 벡터 사용
+            float dirX = it->GetDirectionX();  // Enemy 클래스에 있어야 함
+            float dirY = it->GetDirectionY();
+
+            // 방향 벡터 정규화 (안 되어 있으면)
+            float length = std::sqrt(dirX * dirX + dirY * dirY);
+            if (length != 0.0f) {
+                dirX /= length;
+                dirY /= length;
+            }
+
+            float offset = newRadius * 2.0f;
+
+            it->SetPosition(x - dirX * offset * 0.5f, y - dirY * offset * 0.5f);
+            newEnemy.SetPosition(x + dirX * offset * 0.5f, y + dirY * offset * 0.5f);
+
+            newEnemies.push_back(newEnemy);
+        }
+    }
+
+    for (auto& newEnemy : newEnemies) {
+        enemys.push_back(newEnemy);
     }
 
     //플레이어 <-> 플레이어 충돌처리
-    for (size_t i = 0; i < player.size(); ++i) {
+    for (int i = 0; i < player.size(); ++i) {
         for (size_t j = i + 1; j < player.size(); ++j) {
             float dx = player[j].GetPositionX() - player[i].GetPositionX();
             float dy = player[j].GetPositionY() - player[i].GetPositionY();
@@ -211,12 +260,14 @@ void PlayScene::Update()
 
 
     //플레이어 업데이트
+    int cnt = 0;
     for (auto it = player.begin(); it != player.end(); ++it)
     {
         it->Update();
-        
+        std::cout << cnt << "번째 :  " << it->GetSpeed() << std::endl;
+        cnt++;
     }
-
+    cnt = 0;
     //푸드 업데이트
     for (auto it = foods.begin(); it != foods.end(); ++it)
     {
@@ -226,7 +277,7 @@ void PlayScene::Update()
     //적 업데이트
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
-        it->Update();
+        it->Update(foods ,player);
     }
 
     //트랩 업데이트
@@ -241,7 +292,7 @@ void PlayScene::Update()
         it->Update();
     }
 
-    camera.Update(&player);
+    
 }
 
 void PlayScene::LateUpdate()
@@ -280,10 +331,17 @@ void PlayScene::Render(HDC hdc)
     {
         it->Render(hdc);
     }
-    camera.Render(hdc);
+   
 
     // 마우스 좌표 출력
     WCHAR Text[100];
     wsprintf(Text, L"X : %d Y : %d", (int)Input::GetMousePosition().x, (int)Input::GetMousePosition().y);
     TextOut(hdc, Input::GetMousePosition().x + 10, Input::GetMousePosition().y, Text, lstrlen(Text));
+
+    WCHAR TimeText[100];
+    int minutes = static_cast<int>(PlayTime) / 60;
+    int seconds = static_cast<int>(PlayTime) % 60;
+
+    wsprintf(TimeText, L"Play Time: %02d분 : %02d초", minutes, seconds);
+    TextOut(hdc, 10, 10, TimeText, lstrlen(TimeText));
 }
