@@ -42,10 +42,7 @@ PlayScene::PlayScene()
     }
 
     // 플레이어 객체 초기화
-    GameObject* obj = new Player;
-    obj->SetPosition(widthUid(rd), heightUid(rd));
-    player = *(static_cast<Player*>(obj)); // 플레이어 객체 설정 (player가 PlayScene의 멤버 변수라고 가정)
-    delete obj; // 동적 할당 해제
+    player.SetPosition(1280 / 2, 720 / 2);
 }
 
 PlayScene::~PlayScene()
@@ -87,10 +84,7 @@ void PlayScene::Initialize()
     }
 
     // 플레이어 객체 초기화
-    GameObject* obj = new Player;
-    obj->SetPosition(widthUid(rd), heightUid(rd));
-    player = *(static_cast<Player*>(obj)); // 플레이어 객체 설정
-    delete obj; // 동적 할당 해제
+    player.SetPosition(1280 / 2, 720 / 2);
 }
 
 void PlayScene::Update()
