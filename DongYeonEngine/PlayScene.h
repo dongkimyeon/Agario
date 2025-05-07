@@ -14,6 +14,7 @@ private:
     std::vector<Trap> traps;
     std::vector<Jumbo> jumbos;
     Player player;
+    
 
 public:
     PlayScene();

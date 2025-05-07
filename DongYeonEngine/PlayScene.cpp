@@ -92,8 +92,7 @@ void PlayScene::Update()
     
 
     //플레이어 <-> 먹이 충돌체크
-    RECT playerTempRect = player.GetRect();
-    
+    RECT playerTempRect = player.GetRect();   
     for (auto it = foods.begin(); it != foods.end();)
     {
         RECT foodTempRect = it->GetRect();
@@ -112,6 +111,7 @@ void PlayScene::Update()
             ++it;
         }
     }
+    //적 <-> 먹이 충돌체크 
     //플레이어 업데이트
     player.Update();
 
@@ -124,7 +124,7 @@ void PlayScene::Update()
     //적 업데이트
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
-        it->Update();
+        it->Update(foods);
     }
 
     //트랩 업데이트

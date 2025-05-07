@@ -13,17 +13,52 @@ Enemy::Enemy()
 	speed = 100.0f;
 }
 
-void Enemy::Update()
+void Enemy::Update(std::vector<Food>& foods)
 {
+    // Update the collision rectangle
+    rect.left = mX - radius;
+    rect.right = mX + radius;
+    rect.top = mY - radius;
+    rect.bottom = mY + radius;
 
-	rect.left = mX - radius;
-	rect.right = mX + radius;
-	rect.top = mY - radius;
-	rect.bottom = mY + radius;
+    if (foods.empty()) return; // No food to chase
 
-	
+    // Find the closest food
+    float closestDistance = FLT_MAX;
+    Food* closestFood = nullptr;
+
+    for (Food& food : foods)
+    {
+        float dx = food.GetPositionX() - mX;
+        float dy = food.GetPositionY() - mY;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        if (distance < closestDistance)
+        {
+            closestDistance = distance;
+            closestFood = &food;
+        }
+    }
+
+    if (closestFood)
+    {
+        // Calculate direction to the closest food
+        float dx = closestFood->GetPositionX() - mX;
+        float dy = closestFood->GetPositionY() - mY;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        // Normalize direction and move enemy
+        if (distance > 0) // Prevent division by zero
+        {
+            float directionX = dx / distance;
+            float directionY = dy / distance;
+
+            // Move enemy based on speed and time delta
+            mX += directionX * speed * Time::DeltaTime();
+            mY += directionY * speed * Time::DeltaTime();
+        }
+    }
 }
-
 void Enemy::LateUpdate()
 {
 }
