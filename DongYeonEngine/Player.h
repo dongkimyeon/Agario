@@ -31,9 +31,9 @@ public:
 			speed -= speedReduction;
 
 			// 최소 속도 제한
-			if (speed < 20.0f)
+			if (speed < 15.0f)
 			{
-				speed = 20.0f;
+				speed = 15.0f;
 			}
 		}
 
@@ -55,14 +55,25 @@ public:
 	float GetRadius() override;
 	RECT GetRect() override;
 	
+	void OnSplit()
+	{
+		isSplit = true;
+		timeSinceSplit = 0;
+	}
+	
 private:
 	float mX;
 	float mY;
-	
 	float radius;
 	float speed;
 	RECT rect;
 	COLORREF color;
+	float timeSinceSplit; // 분열 후 경과 시간
+	bool isSplit; // 분열 상태인지 여부
+	float boostTime = 0.7f; // 속도 변화 지속 시간
+	float oldSpeed; //원래 속도 저장
+	
+
 
 };
 

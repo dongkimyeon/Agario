@@ -13,7 +13,7 @@ private:
     std::vector<Enemy> enemys;
     std::vector<Trap> traps;
     std::vector<Jumbo> jumbos;
-    Player player;
+    std::vector<Player> player;
     
 
 public:

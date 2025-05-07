@@ -10,7 +10,7 @@ Jumbo::Jumbo()
 	mY = 0;
 	rect = { (int)(mX - radius), (int)(mY - radius),(int)(mX + radius),(int)(rect.bottom = mY + radius) };
 	color = RGB(0, 122, 122);
-	radius = 10.0f;
+	radius = 30.0f;
 }
 
 void Jumbo::Update()
@@ -26,24 +26,39 @@ void Jumbo::Update()
 void Jumbo::LateUpdate()
 {
 }
-
 void Jumbo::Render(HDC hdc)
 {
-	Graphics graphics(hdc);
-	graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+    Graphics graphics(hdc);
+    graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-	// GDI+ 색상 객체 생성
-	Color gdiColor(GetRValue(color), GetGValue(color), GetBValue(color));
-	SolidBrush brush(gdiColor);
+   
+	Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
+	SolidBrush brush(gdiBrushColor);
+	Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
+	Pen pen(gdiPenColor, 4);
+    //디버깅용
+    //Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
 
-	// 디버깅용 사각형(충돌영역)
-	Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+    
+    POINT points[3];
+    float centerX = mX;
+    float centerY = mY;
+    float r = radius;
 
-	// 사각형 안에 원 그리기
-	INT ellipseWidth = rect.right - rect.left; //너비
-	INT ellipseHeight = rect.bottom - rect.top; //높이
-	graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
+    points[0].x = static_cast<LONG>(centerX);
+    points[0].y = static_cast<LONG>(centerY - r);
+
+    points[1].x = static_cast<LONG>(centerX - r * 0.866f);
+    points[1].y = static_cast<LONG>(centerY + r * 0.5f);
+
+    points[2].x = static_cast<LONG>(centerX + r * 0.866f);
+    points[2].y = static_cast<LONG>(centerY + r * 0.5f);
+
+    graphics.FillPolygon(&brush, (Gdiplus::Point*)points, 3);
+    graphics.DrawPolygon(&pen, (Gdiplus::Point*)points, 3);
 }
+
+
 
 
 

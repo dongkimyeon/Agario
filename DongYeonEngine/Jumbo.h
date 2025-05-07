@@ -38,6 +38,7 @@ private:
 	float mY;
 	float radius;
 	RECT rect;
+	
 	COLORREF color;
 
 };

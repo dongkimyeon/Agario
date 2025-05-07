@@ -30,20 +30,23 @@ void Trap::LateUpdate()
 
 void Trap::Render(HDC hdc)
 {
+
 	Graphics graphics(hdc);
 	graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-
+	graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
 	// GDI+ 색상 객체 생성
-	Color gdiColor(GetRValue(color), GetGValue(color), GetBValue(color));
-	SolidBrush brush(gdiColor);
-
+	Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
+	SolidBrush brush(gdiBrushColor);
+	Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
+	Pen pen(gdiPenColor, 4);
 	// 디버깅용 사각형(충돌영역)
-	Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+	//Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
 
 	// 사각형 안에 원 그리기
 	INT ellipseWidth = rect.right - rect.left; //너비
 	INT ellipseHeight = rect.bottom - rect.top; //높이
 	graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
+	graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
 }
 
 
