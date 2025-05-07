@@ -15,6 +15,7 @@ private:
     std::vector<Trap> traps;
     std::vector<Jumbo> jumbos;
     std::vector<Player> player;
+	Camera camera;
     float PlayTime;
 
 public:

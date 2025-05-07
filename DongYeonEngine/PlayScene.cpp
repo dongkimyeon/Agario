@@ -292,7 +292,7 @@ void PlayScene::Update()
         it->Update();
     }
 
-    
+	camera.Update(&player[0]); // 카메라 업데이트 (첫 번째 플레이어를 기준으로)
 }
 
 void PlayScene::LateUpdate()
@@ -302,6 +302,8 @@ void PlayScene::LateUpdate()
 
 void PlayScene::Render(HDC hdc)
 {
+   
+
     // 플레이어 렌더링
     for (auto it = player.begin(); it != player.end(); ++it)
     {
@@ -331,7 +333,8 @@ void PlayScene::Render(HDC hdc)
     {
         it->Render(hdc);
     }
-   
+	camera.Render(hdc); // 카메라 렌더링
+    
 
     // 마우스 좌표 출력
     WCHAR Text[100];
