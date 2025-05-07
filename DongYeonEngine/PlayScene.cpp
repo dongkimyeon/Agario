@@ -1,6 +1,8 @@
 #pragma once
 #include "PlayScene.h"
 #include "Input.h"
+#include "Camera.h"
+
 // 카메라 객체는 필요 시 추가
 
 std::uniform_int_distribution<int> widthUid(0, 1280);
@@ -42,7 +44,10 @@ PlayScene::PlayScene()
     }
 
     // 플레이어 객체 초기화
-    player.SetPosition(1280 / 2, 720 / 2);
+    GameObject* obj = new Player;
+    obj->SetPosition(widthUid(rd), heightUid(rd));
+    player = *(static_cast<Player*>(obj)); // 플레이어 객체 설정 (player가 PlayScene의 멤버 변수라고 가정)
+    delete obj; // 동적 할당 해제
 }
 
 PlayScene::~PlayScene()
@@ -84,37 +89,48 @@ void PlayScene::Initialize()
     }
 
     // 플레이어 객체 초기화
-    player.SetPosition(1280 / 2, 720 / 2);
+    GameObject* obj = new Player;
+    obj->SetPosition(widthUid(rd), heightUid(rd));
+    player = *(static_cast<Player*>(obj)); // 플레이어 객체 설정
+    delete obj; // 동적 할당 해제
+
+    camera.Initialize(&player);
 }
 
 void PlayScene::Update()
 {
     
 
-    // 플레이어 <-> 음식 충돌 체크 (원 기반)
+    //플레이어 <-> 먹이 충돌체크
+    RECT playerTempRect = player.GetRect();
+    
     for (auto it = foods.begin(); it != foods.end();)
     {
-        // 중심점 간 거리 계산
-        float dx = player.GetPositionX() - it->GetPositionX();
-        float dy = player.GetPositionY() - it->GetPositionY();
-        float distance = std::sqrt(dx * dx + dy * dy);
+        RECT foodTempRect = it->GetRect();
+        //// Food 객체의 RECT 좌표 출력
+        //std::cout << "Food Rect: left=" << foodTempRect.left
+        //    << ", top=" << foodTempRect.top
+        //    << ", right=" << foodTempRect.right
+        //    << ", bottom=" << foodTempRect.bottom << std::endl;
 
-        // 반지름 합과 비교
-        float radiusSum = player.GetRadius() + it->GetRadius();
-        if (distance <= radiusSum)
+        //// 디버깅: 플레이어 RECT 좌표도 함께 출력 (선택 사항)
+        //std::cout << "Player Rect: left=" << playerTempRect.left
+        //    << ", top=" << playerTempRect.top
+        //    << ", right=" << playerTempRect.right
+        //    << ", bottom=" << playerTempRect.bottom << std::endl;
+
+        std::cout << player.GetSpeed() << std::endl;
+        RECT temp;
+        if (IntersectRect(&temp, &playerTempRect, &foodTempRect))
         {
-            float deltaRadius = player.GetRadius() + (it->GetRadius() / 4);
-            player.Setradius(deltaRadius);
+            player.Setradius(player.GetRadius() + 0.05);
             it = foods.erase(it); // 충돌한 음식 제거
-            std::cout << player.GetRadius() << std::endl;
         }
         else
         {
             ++it;
         }
     }
-
-    //적 <-> 먹이 충돌체크 
     //플레이어 업데이트
     player.Update();
 
@@ -127,7 +143,7 @@ void PlayScene::Update()
     //적 업데이트
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
-        it->Update(foods);
+        it->Update();
     }
 
     //트랩 업데이트
@@ -141,6 +157,8 @@ void PlayScene::Update()
     {
         it->Update();
     }
+
+    camera.Update(&player);
 }
 
 void PlayScene::LateUpdate()
@@ -176,6 +194,7 @@ void PlayScene::Render(HDC hdc)
     {
         it->Render(hdc);
     }
+    camera.Render(hdc);
 
     // 마우스 좌표 출력
     WCHAR Text[100];

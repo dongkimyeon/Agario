@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Food.h" />
@@ -143,9 +144,11 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="Transform.h" />
     <ClInclude Include="Trap.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Food.cpp" />
@@ -162,6 +165,7 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TitleScene.cpp" />
+    <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Trap.cpp" />
   </ItemGroup>
   <ItemGroup>
