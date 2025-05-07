@@ -45,12 +45,7 @@ void Jumbo::Render(HDC hdc)
 	graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
 }
 
-void Jumbo::SetPosition(float x, float y)
-{
-	mX = x;
-	mY = y;
 
-}
 
 float Jumbo::GetPositionX()
 {

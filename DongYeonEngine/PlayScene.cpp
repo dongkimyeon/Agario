@@ -103,24 +103,15 @@ void PlayScene::Update()
     for (auto it = foods.begin(); it != foods.end();)
     {
         RECT foodTempRect = it->GetRect();
-        //// Food 객체의 RECT 좌표 출력
-        //std::cout << "Food Rect: left=" << foodTempRect.left
-        //    << ", top=" << foodTempRect.top
-        //    << ", right=" << foodTempRect.right
-        //    << ", bottom=" << foodTempRect.bottom << std::endl;
-
-        //// 디버깅: 플레이어 RECT 좌표도 함께 출력 (선택 사항)
-        //std::cout << "Player Rect: left=" << playerTempRect.left
-        //    << ", top=" << playerTempRect.top
-        //    << ", right=" << playerTempRect.right
-        //    << ", bottom=" << playerTempRect.bottom << std::endl;
-
-        std::cout << player.GetSpeed() << std::endl;
+        
+        
         RECT temp;
         if (IntersectRect(&temp, &playerTempRect, &foodTempRect))
         {
-            player.Setradius(player.GetRadius() + 0.05);
+            float deltaRadius = player.GetRadius() + (it->GetRadius()/4);
+            player.Setradius(deltaRadius);
             it = foods.erase(it); // 충돌한 음식 제거
+            std::cout << player.GetRadius() << std::endl;
         }
         else
         {

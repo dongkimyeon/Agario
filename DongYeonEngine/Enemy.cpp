@@ -46,12 +46,6 @@ void Enemy::Render(HDC hdc)
 	graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
 }
 
-void Enemy::SetPosition(float x, float y)
-{
-	mX = x;
-	mY = y;
-
-}
 
 float Enemy::GetPositionX()
 {

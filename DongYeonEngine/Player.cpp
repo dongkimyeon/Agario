@@ -42,6 +42,11 @@ void Player::Update()
     rect.right = (int)(mX + radius);
     rect.top = (int)(mY - radius);
     rect.bottom = (int)(mY + radius);
+	
+
+	//크기에 따라서 radius값에 따라서 속도가 반비례하게 줄어든다
+	
+
 }
 
 void Player::LateUpdate()
@@ -66,14 +71,7 @@ void Player::Render(HDC hdc)
 	graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
 }
 
-void Player::SetPosition(float x, float y)
-{
-	mX = x;
-	mY = y;
-	position.x = x;
-	position.y = y;
 
-}
 
 float Player::GetPositionX()
 {
