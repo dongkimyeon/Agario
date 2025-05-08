@@ -70,6 +70,15 @@ void PlayScene::Update()
 {
     // 플레이타임 갱신
     PlayTime += Time::DeltaTime();
+    //분열 타임 갱신
+    for (int i = 0; i < player.size(); ++i)
+    {
+        player[i].PlusTime(Time::DeltaTime());
+    }
+    
+
+    int minutes = static_cast<int>(PlayTime) / 60;
+    int seconds = static_cast<int>(PlayTime) % 60;
 
     // 플레이어 <-> 음식 충돌 체크 (원 기반)
     for (auto it = player.begin(); it != player.end();)
@@ -98,7 +107,6 @@ void PlayScene::Update()
         it++;
 
     }
-
 
     //적 <-> 먹이 충돌체크 
     for (auto it = enemys.begin(); it != enemys.end();)
@@ -159,6 +167,7 @@ void PlayScene::Update()
             Player newPlayer;
             newPlayer.Setradius(newRadius); // 새 플레이어 반지름 설정 (속도 자동 계산)
             newPlayer.SetColor(it->GetColor()); // 색상 복사
+            newPlayer.SetSpeed(it->GetSpeed());
             newPlayer.OnSplit(); // 분열 상태 활성화
 
             float x = it->GetPositionX();
@@ -185,6 +194,63 @@ void PlayScene::Update()
             player.push_back(newPlayer);
         }
     }
+
+    //플레이어 합치기
+    for (int i = 1; i < player.size(); ++i)
+    {
+        std::cout << (int)player[i].GetSplitTime() << std::endl;
+
+        if ((int)player[i].GetSplitTime() >= 3 && player.size() > 1) // 2초마다, 플레이어가 2개 이상일 때
+        {
+            auto basePlayer = player.begin(); // 기준 플레이어 (첫 번째 플레이어)
+            for (auto it = std::next(player.begin()); it != player.end();)
+            {
+                // 기준 플레이어 방향으로 이동
+                float dx = basePlayer->GetPositionX() - it->GetPositionX();
+                float dy = basePlayer->GetPositionY() - it->GetPositionY();
+                float distance = std::sqrt(dx * dx + dy * dy);
+
+                if (distance < 0.1f) // 너무 가까우면 이동 생략
+                {
+                    ++it;
+                    continue;
+                }
+
+                // 방향 벡터 정규화
+                dx /= distance;
+                dy /= distance;
+
+                // 플레이어 속도 기반으로 이동
+                float moveSpeed = it->GetSpeed() * Time::DeltaTime();
+                it->SetPosition(
+                    it->GetPositionX() + dx * moveSpeed,
+                    it->GetPositionY() + dy * moveSpeed
+                );
+
+                // 충돌 체크
+                float radiusSum = basePlayer->GetRadius() + it->GetRadius();
+                if (distance <= radiusSum)
+                {
+                    // 반지름 합치기 (면적 기반 계산)
+                    float area1 = basePlayer->GetRadius() * basePlayer->GetRadius();
+                    float area2 = it->GetRadius() * it->GetRadius();
+                    float newRadius = std::sqrt(area1 + area2);
+                    basePlayer->Setradius(newRadius);
+
+                    // 합쳐진 플레이어 제거
+                    it = player.erase(it);
+
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+        }
+    }
+    
+    
+    
     // 적 분열
     std::vector<Enemy> newEnemies;
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
@@ -227,14 +293,14 @@ void PlayScene::Update()
             newEnemies.push_back(newEnemy);
         }
     }
-
     for (auto& newEnemy : newEnemies) {
         enemys.push_back(newEnemy);
     }
 
     //플레이어 <-> 플레이어 충돌처리
     for (int i = 0; i < player.size(); ++i) {
-        for (size_t j = i + 1; j < player.size(); ++j) {
+        for (int j = i + 1; j < player.size(); ++j) 
+        {
             float dx = player[j].GetPositionX() - player[i].GetPositionX();
             float dy = player[j].GetPositionY() - player[i].GetPositionY();
             float distance = std::sqrt(dx * dx + dy * dy);
@@ -250,6 +316,8 @@ void PlayScene::Update()
                 // 밀어내기 - 각 플레이어를 반씩 이동
                 float pushX = nx * (overlap / 2.0f);
                 float pushY = ny * (overlap / 2.0f);
+                
+              
 
                 player[i].SetPosition(player[i].GetPositionX() - pushX, player[i].GetPositionY() - pushY);
                 player[j].SetPosition(player[j].GetPositionX() + pushX, player[j].GetPositionY() + pushY);
@@ -257,7 +325,8 @@ void PlayScene::Update()
         }
     }
     
-
+    //플레이어 합치기 
+     
 
     //플레이어 업데이트
     int cnt = 0;

@@ -15,17 +15,19 @@ Player::Player()
     timeSinceSplit = 0.0f;
     isSplit = false;
     boostTime = 0.5f;
+    splitTime = 0.0f;
+    isBoost;
 }
 
 void Player::Update()
 {
     // 분열 중 속도 부스트
-    if (isSplit)
+    if (isSplit && isBoost)
     {
         timeSinceSplit += Time::DeltaTime();
         if (timeSinceSplit >= boostTime)
         {
-            isSplit = false;
+            isBoost = false;
             timeSinceSplit = 0.0f;
             Setradius(radius); // 반지름 기반으로 속도 재설정
         }
