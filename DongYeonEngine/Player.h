@@ -40,8 +40,9 @@ private:
     float timeSinceSplit; // 분열 후 경과 시간
     bool isSplit; // 분열 상태인지 여부
     bool isBoost;
-    float boostTime = 0.5f; // 속도 부스트 지속 시간
     float splitTime = 0.0f;
+    float boostTime = 0.5f; // 속도 부스트 지속 시간
+   
     // 속도 계산용 상수
     static constexpr float BASE_RADIUS = 30.0f; // 기준 반지름
     static constexpr float BASE_SPEED = 80.0f; // 기준 속도
