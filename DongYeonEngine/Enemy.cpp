@@ -14,6 +14,7 @@ Enemy::Enemy()
 	PlayerDetect = false;
     leader = false;
 	speed = 100.0f;
+	splitTime = 0.0f;
 }
 
 void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players, std::vector<Enemy>& enemies)
@@ -142,6 +143,14 @@ void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players, std::
     float moveSpeed = speed * Time::DeltaTime();
     mX += dirX * moveSpeed;
     mY += dirY * moveSpeed;
+
+    // 클라이언트 영역(1600x800) 경계 제한
+    const int CLIENT_WIDTH = 1600;
+    const int CLIENT_HEIGHT = 800;
+
+    // 적 중심(mX, mY)이 경계를 벗어나지 않도록 제한
+    mX = (std::max)(radius, (std::min)((float)CLIENT_WIDTH - radius, mX));
+    mY = (std::max)(radius, (std::min)((float)CLIENT_HEIGHT - radius, mY));
 
     // 충돌 사각형 업데이트
     rect.left = (int)(mX - radius);

@@ -55,6 +55,13 @@ void Player::Update()
         mX += dx * speed * Time::DeltaTime();
         mY += dy * speed * Time::DeltaTime();
     }
+    // 클라이언트 영역(1600x800) 경계 제한
+    const int CLIENT_WIDTH = 1600;
+    const int CLIENT_HEIGHT = 800;
+
+    // 플레이어 중심(mX, mY)이 경계를 벗어나지 않도록 제한
+    mX = (std::max)(radius, (std::min)((float)CLIENT_WIDTH - radius, mX));
+    mY = (std::max)(radius, (std::min)((float)CLIENT_HEIGHT - radius, mY));
 
     // 충돌 영역 업데이트
     rect.left = (int)(mX - radius);

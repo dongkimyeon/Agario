@@ -26,12 +26,19 @@ public:
 	{
 		color = c;
 	}
+	void SetDirection(float a, float b)
+	{
+		dirX = a;
+		dirY = b;
+	}
 	float GetPositionX() override;
 	float GetPositionY() override;
 	
 private:
 	float mX;
 	float mY;
+	float dirX;
+	float dirY;
 	float radius;
 	float speed;
 	RECT rect;

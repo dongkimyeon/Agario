@@ -6,6 +6,7 @@
 #include "Trap.h"
 #include "Jumbo.h"
 #include "Camera.h"
+#include "SceneManager.h"
 
 
 class PlayScene : public Scene {
@@ -19,6 +20,10 @@ private:
     float PlayTime;
     float foodSpawnTimer;
     float enemySpawnTimer;
+    float trapSpawnTimer;
+
+    int enemyCnt;
+    int trapCnt;
 
 public:
     PlayScene();
