@@ -24,6 +24,7 @@ private:
 
     int enemyCnt;
     int trapCnt;
+    int eatCnt;
 
 public:
     PlayScene();

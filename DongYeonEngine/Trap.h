@@ -41,6 +41,7 @@ private:
 	float dirY;
 	float radius;
 	float speed;
+
 	RECT rect;
 	COLORREF color;
 

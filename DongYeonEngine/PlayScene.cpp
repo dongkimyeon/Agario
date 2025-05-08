@@ -92,6 +92,7 @@ PlayScene::PlayScene()
     enemySpawnTimer = 0.0f;
     trapCnt = TRAP_SIZE;
     enemyCnt = 0;
+    eatCnt = 0;
     // 음식 객체 초기화
     while (foods.size() < FOOD_SIZE)
     {
@@ -237,6 +238,7 @@ void PlayScene::Update()
             {
                 float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
                 it->Setradius(deltaRadius);
+                eatCnt++;
                 jt = foods.erase(jt);
             }
             else
@@ -479,10 +481,10 @@ void PlayScene::Update()
             }
         }
     }
-    
+    // 적 <-> 적 충돌처리
     if (!enemys.empty())
     {
-        // 적 <-> 적 충돌처리
+       
         for (int i = 0; i < enemys.size(); ++i) {
             for (int j = i + 1; j < enemys.size(); ++j)
             {
@@ -588,9 +590,22 @@ void PlayScene::Render(HDC hdc)
     TextOut(hdc, Input::GetMousePosition().x + 10, Input::GetMousePosition().y, Text, lstrlen(Text));
 
     WCHAR TimeText[100];
+    WCHAR PlayerRadiusText[100];
+    WCHAR PlayerEatCntText[100];
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
+    float max = 0;
+    for (auto it = player.begin(); it != player.end(); ++it)
+    {
+        if (it->GetRadius() > 0)
+            max = it->GetRadius();
+    }
 
     wsprintf(TimeText, L"Play Time: %02d분 : %02d초", minutes, seconds);
+    wsprintf(PlayerRadiusText, L"Player High Radius : %d", (int)max );
+    wsprintf(PlayerEatCntText, L"Player Food Cnt: %d", eatCnt);
+
     TextOut(hdc, 10, 10, TimeText, lstrlen(TimeText));
+    TextOut(hdc, 10, 30, PlayerRadiusText, lstrlen(PlayerRadiusText));
+    TextOut(hdc, 10, 50, PlayerEatCntText, lstrlen(PlayerEatCntText));
 }

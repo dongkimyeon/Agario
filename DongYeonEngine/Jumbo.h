@@ -10,7 +10,11 @@ public:
 	void Render(HDC hdc) override;
 
 	void SetPosition(float x, float y) override;
-
+	void SetDirection(float a, float b)
+	{
+		dirX = a;
+		dirY = b;
+	}
 	float GetPositionX() override;
 	float GetPositionY() override;
 	float GetSpeed() override;
@@ -20,9 +24,12 @@ public:
 private:
 	float mX;
 	float mY;
+	float dirX;
+	float dirY;
 	float radius;
+	float speed;
+
 	RECT rect;
-	
 	COLORREF color;
 
 };

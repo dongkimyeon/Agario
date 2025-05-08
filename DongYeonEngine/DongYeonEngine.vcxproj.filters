@@ -84,6 +84,9 @@
     <ClInclude Include="Transform.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="EndScene.h">
+      <Filter>Scenes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -142,6 +145,9 @@
     </ClCompile>
     <ClCompile Include="Transform.cpp">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="EndScene.cpp">
+      <Filter>Scenes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

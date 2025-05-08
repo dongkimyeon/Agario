@@ -4,19 +4,21 @@
 using namespace Gdiplus;
 #define M_PI 3.14159265358979
 
-std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
-std::random_device gen;
 
 Trap::Trap()
 {
+    std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
+    std::uniform_real_distribution<float> distRadius(30.0f, 70.0f);
+    std::random_device gen;
+
+
 	mX = 0;
 	mY = 0;
 	rect = { (int)(mX - radius), (int)(mY - radius),(int)(mX + radius),(int)(rect.bottom = mY + radius) };
 	color = RGB(255, 255, 0);
-	radius = 30.0f;
+	radius = (float)distRadius(gen);
 	speed = 100.0f;
     // 초기 랜덤 각도 설정
-    std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
     float angle = distAngle(gen);
     dirX = cos(angle);
     dirY = sin(angle);
@@ -27,6 +29,10 @@ Trap::Trap()
 
 void Trap::Update()
 {
+    std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
+    std::random_device gen;
+
+
     float deltaTime = Time::DeltaTime(); // 시간 기반 이동
     mX += dirX * speed * deltaTime;
     mY += dirY * speed * deltaTime;
