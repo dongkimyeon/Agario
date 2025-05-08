@@ -200,7 +200,7 @@ void PlayScene::Update()
     {
         std::cout << (int)player[i].GetSplitTime() << std::endl;
 
-        if ((int)player[i].GetSplitTime() >= 3 && player.size() > 1) // 2초마다, 플레이어가 2개 이상일 때
+        if ((int)player[i].GetSplitTime() >= 3 && player.size() > 1) // 
         {
             auto basePlayer = player.begin(); // 기준 플레이어 (첫 번째 플레이어)
             for (auto it = std::next(player.begin()); it != player.end();)
@@ -231,10 +231,8 @@ void PlayScene::Update()
                 float radiusSum = basePlayer->GetRadius() + it->GetRadius();
                 if (distance <= radiusSum)
                 {
-                    // 반지름 합치기 (면적 기반 계산)
-                    float area1 = basePlayer->GetRadius() * basePlayer->GetRadius();
-                    float area2 = it->GetRadius() * it->GetRadius();
-                    float newRadius = std::sqrt(area1 + area2);
+                   
+                    float newRadius = basePlayer->GetRadius() + it->GetRadius();
                     basePlayer->Setradius(newRadius);
 
                     // 합쳐진 플레이어 제거
@@ -325,7 +323,6 @@ void PlayScene::Update()
         }
     }
     
-    //플레이어 합치기 
      
 
     //플레이어 업데이트
