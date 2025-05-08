@@ -8,7 +8,7 @@ extern const UINT height;
 TitleScene::TitleScene()
     : mBackgroundImage(nullptr)
     , mGdiplusToken(0)
-    , startButton({ 320, 500, 960, 650 })
+    , startButton({ 400, 500, 1200, 650 })
     , mAlphaTimer(0.0f)
 {
     // GDI+ 초기화
@@ -49,7 +49,7 @@ void TitleScene::Update()
     }
 
     // 알파 타이머 업데이트 (페이드 효과를 위해)
-    mAlphaTimer += 0.05f; // 속도 조절 (값이 클수록 빠르게 깜빡임)
+    mAlphaTimer += 0.4f; // 속도 조절 (값이 클수록 빠르게 깜빡임)
     if (mAlphaTimer > 2.0f * 3.14159f) // 2π 주기로 반복
         mAlphaTimer -= 2.0f * 3.14159f;
 }
@@ -64,31 +64,11 @@ void TitleScene::Render(HDC hdc)
     Scene::Render(hdc);
     Gdiplus::Graphics graphics(hdc);
 
-    // 백그라운드 이미지 그리기
-    float bgImgWidth = static_cast<float>(mBackgroundImage->GetWidth());
-    float bgImgHeight = static_cast<float>(mBackgroundImage->GetHeight());
+    // 백그라운드 이미지 그리기 (창 크기에 맞게 스트레치)
+    graphics.DrawImage(mBackgroundImage, 0, 0, width, height);
 
-    // 스케일링 비율 계산 (창에 맞게 축소)
-    float scaleX = static_cast<float>(width / bgImgWidth);
-    float scaleY = static_cast<float>(height / bgImgHeight);
-    float backGroundScale = min(scaleX, scaleY); // 더 작은 비율 선택 (창 안에 들어가게)
-
-    // 이미지가 창보다 작을 경우 원본 크기 유지
-    if (backGroundScale > 1.0f) backGroundScale = 1.0f;
-
-    // 새 이미지 크기 계산
-    int destWidth = static_cast<int>(bgImgWidth * backGroundScale);
-    int destHeight = static_cast<int>(bgImgHeight * backGroundScale);
-
-    // 중앙 정렬을 위한 오프셋
-    int destX = (width - destWidth) / 2;
-    int destY = (height - destHeight) / 2;
-
-    // 이미지 렌더링
-    graphics.DrawImage(mBackgroundImage, destX, destY, destWidth, destHeight);
-
-    // 스타트 버튼 사각형 그리기
-   // Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
+    // 스타트 버튼 사각형 그리기 (디버깅용, 필요 시 주석 해제)
+    // Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
 
     // "PRESS TO SPACE" 텍스트 그리기
     Gdiplus::Font font(L"Arial", 24, Gdiplus::FontStyleBold);

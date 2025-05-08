@@ -35,6 +35,6 @@ void Time::Render(HDC hdc)
     swprintf_s(str, 50, L"FPS : %d", (int)fps);
     int len = wcsnlen_s(str, 50);
 
-    TextOut(hdc, 1270/2, 0, str, len);
+    TextOut(hdc, 1600/2, 10, str, len);
 }
 float Time::DeltaTime() { return DeltaTimeValue; }

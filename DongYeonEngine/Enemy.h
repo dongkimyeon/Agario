@@ -6,7 +6,7 @@ class Enemy : public GameObject
 {
 public:
 	Enemy();
-	void Update(std::vector<Food>& foods , std::vector<Player>& players);
+	void Update(std::vector<Food>& foods, std::vector<Player>& players, std::vector<Enemy>& enemies);
 	void LateUpdate() override;
 	void Render(HDC hdc) override;
 
@@ -24,13 +24,23 @@ public:
 	{
 		color = c;
 	}
+	void SetId(int i)
+	{
+		id = i;
+	}
+	void SetLeader(bool b)
+	{
+		leader = b;
+	}
+
+	bool GetLeaderFlag() { return leader; }
 	float GetPositionX() override;
 	float GetPositionY() override;
 	float GetSpeed() override;
 	COLORREF GetColor() override;
 	float GetRadius() override;
 	RECT GetRect() override;
-	void OnSplit() { isSplit = true; timeSinceSplit = 0.0f; }
+	void OnSplit() { isSplit = true; isBoost = true; timeSinceSplit = 0.0f; }
 	void SetDirection(float dx, float dy) {
 		// 방향 벡터를 정규화해서 저장
 		float length = std::sqrt(dx * dx + dy * dy);
@@ -43,6 +53,8 @@ public:
 	float GetDirectionX() const { return dirX; }
 	float GetDirectionY() const { return dirY; }
 
+	int GetId() const { return id; }
+
 private:
 	float mX;
 	float mY;
@@ -52,7 +64,11 @@ private:
 	COLORREF color;
 	float timeSinceSplit; // 분열 후 경과 시간
 	bool isSplit; // 분열 상태인지 여부
+	bool isBoost;
+	int id;
+	bool leader;
 	float boostTime = 0.5f; // 속도 부스트 지속 시간
+
 	float detectPlayerRange;
 	bool PlayerDetect = false; // 플레이어 감지 여부
 	float dirX = 0.0f;

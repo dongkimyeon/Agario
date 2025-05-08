@@ -1,58 +1,142 @@
-#pragma once
+ï»¿#pragma once
 #include "PlayScene.h"
 #include "Input.h"
 #include "Time.h"
 
 #define FOOD_SIZE 50
-#define ENEMY_SIZE 2
-#define JUMBO_SIZE 5
+#define ENEMY_SIZE 1
+#define JUMBO_SIZE 1
 #define TRAP_SIZE 5
 
-// Ä«¸Ş¶ó °´Ã¼´Â ÇÊ¿ä ½Ã Ãß°¡
+std::mt19937 gen(std::random_device{}()); // ì‹œë“œ ì´ˆê¸°í™”
+std::uniform_int_distribution<int> widthUid(20, 1580); // 1600 - 20
+std::uniform_int_distribution<int> heightUid(20, 780); // 800 - 20
 
-std::uniform_int_distribution<int> widthUid(0, 1280);
-std::uniform_int_distribution<int> heightUid(0, 720);
-std::random_device rd;
+// ê²¹ì¹¨ í™•ì¸ í•¨ìˆ˜
+bool IsOverlapping(float x, float y, float radius, std::vector<Food>& foods,
+    std::vector<Enemy>& enemies, std::vector<Trap>& traps,
+    std::vector<Jumbo>& jumbos, std::vector<Player>& players)
+{
+    // Foodì™€ ê²¹ì¹¨ í™•ì¸
+    for (auto food : foods) {
+        float dx = x - food.GetPositionX();
+        float dy = y - food.GetPositionY();
+        float distance = std::sqrt(dx * dx + dy * dy);
+        if (distance < (radius + food.GetRadius())) {
+            return true;
+        }
+    }
+
+    // Enemyì™€ ê²¹ì¹¨ í™•ì¸
+    for (auto enemy : enemies) {
+        float dx = x - enemy.GetPositionX();
+        float dy = y - enemy.GetPositionY();
+        float distance = std::sqrt(dx * dx + dy * dy);
+        if (distance < (radius + enemy.GetRadius())) {
+            return true;
+        }
+    }
+
+    // Trapê³¼ ê²¹ì¹¨ í™•ì¸
+    for (auto trap : traps) {
+        float dx = x - trap.GetPositionX();
+        float dy = y - trap.GetPositionY();
+        float distance = std::sqrt(dx * dx + dy * dy);
+        if (distance < (radius + trap.GetRadius())) {
+            return true;
+        }
+    }
+
+    // Jumboì™€ ê²¹ì¹¨ í™•ì¸
+    for (auto jumbo : jumbos) {
+        float dx = x - jumbo.GetPositionX();
+        float dy = y - jumbo.GetPositionY();
+        float distance = std::sqrt(dx * dx + dy * dy);
+        if (distance < (radius + jumbo.GetRadius())) {
+            return true;
+        }
+    }
+
+    // Playerì™€ ê²¹ì¹¨ í™•ì¸
+    for (auto player : players) {
+        float dx = x - player.GetPositionX();
+        float dy = y - player.GetPositionY();
+        float distance = std::sqrt(dx * dx + dy * dy);
+        if (distance < (radius + player.GetRadius())) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ìƒˆë¡œìš´ ìœ„ì¹˜ ìƒì„± í•¨ìˆ˜
+void SetNonOverlappingPosition(float& x, float& y, float radius, std::vector<Food>& foods,
+    std::vector<Enemy>& enemies, std::vector<Trap>& traps,
+    std::vector<Jumbo>& jumbos, std::vector<Player>& players)
+{
+    int maxAttempts = 500; // ìµœëŒ€ ì‹œë„ íšŸìˆ˜ ì¦ê°€
+    for (int i = 0; i < maxAttempts; ++i) {
+        x = static_cast<float>(widthUid(gen));
+        y = static_cast<float>(heightUid(gen));
+        if (!IsOverlapping(x, y, radius, foods, enemies, traps, jumbos, players)) {
+            return;
+        }
+    }
+}
 
 PlayScene::PlayScene()
 {
-	PlayTime = 0.0f;
-    // À½½Ä °´Ã¼ ÃÊ±âÈ­
-    for (int i = 0; i < FOOD_SIZE; ++i)
+    PlayTime = 0.0f;
+    foodSpawnTimer = 0.0f;
+    enemySpawnTimer = 0.0f;
+    // ìŒì‹ ê°ì²´ ì´ˆê¸°í™”
+    while (foods.size() < FOOD_SIZE)
     {
         Food obj;
-        obj.SetPosition(widthUid(rd), heightUid(rd));
+        float x, y;
+        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+        obj.SetPosition(x, y);
         foods.push_back(obj);
     }
 
-    // Àû °´Ã¼ ÃÊ±âÈ­
-    for (int i = 0; i < ENEMY_SIZE; ++i)
+    // ì  ê°ì²´ ì´ˆê¸°í™”
+    while (enemys.size() < ENEMY_SIZE)
     {
         Enemy obj;
-        obj.SetPosition(widthUid(rd), heightUid(rd));
+        float x, y;
+        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+        obj.SetPosition(x, y);
+        obj.SetId(enemys.size());
+        obj.SetLeader(true);
         enemys.push_back(obj);
     }
 
-    // Æ®·¦ °´Ã¼ ÃÊ±âÈ­
-    for (int i = 0; i < TRAP_SIZE; ++i)
+    // íŠ¸ë© ê°ì²´ ì´ˆê¸°í™”
+    while (traps.size() < TRAP_SIZE)
     {
         Trap obj;
-        obj.SetPosition(widthUid(rd), heightUid(rd));
+        float x, y;
+        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+        obj.SetPosition(x, y);
         traps.push_back(obj);
     }
 
-    // Á¡º¸ °´Ã¼ ÃÊ±âÈ­
-    for (int i = 0; i < JUMBO_SIZE; ++i)
+    // ì ë³´ ê°ì²´ ì´ˆê¸°í™”
+    while (jumbos.size() < JUMBO_SIZE)
     {
         Jumbo obj;
-        obj.SetPosition(widthUid(rd), heightUid(rd));
+        float x, y;
+        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+        obj.SetPosition(x, y);
         jumbos.push_back(obj);
     }
 
-
-    // ÇÃ·¹ÀÌ¾î °´Ã¼ ÃÊ±âÈ­
+    // í”Œë ˆì´ì–´ ê°ì²´ ì´ˆê¸°í™”
     Player obj;
-    obj.SetPosition(1280/2, 720/2);
+    float x, y;
+    SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+    obj.SetPosition(x, y);
     player.push_back(obj);
 }
 
@@ -62,42 +146,38 @@ PlayScene::~PlayScene()
 
 void PlayScene::Initialize()
 {
-    
-    
 }
 
 void PlayScene::Update()
 {
-    // ÇÃ·¹ÀÌÅ¸ÀÓ °»½Å
+    // í”Œë ˆì´íƒ€ì„ ê°±ì‹ 
     PlayTime += Time::DeltaTime();
-    //ºĞ¿­ Å¸ÀÓ °»½Å
+    foodSpawnTimer += Time::DeltaTime();
+    enemySpawnTimer += Time::DeltaTime();
+    // ë¶„ì—´ íƒ€ì„ ê°±ì‹ 
     for (int i = 0; i < player.size(); ++i)
     {
         player[i].PlusTime(Time::DeltaTime());
     }
-    
 
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
 
-    // ÇÃ·¹ÀÌ¾î <-> À½½Ä Ãæµ¹ Ã¼Å© (¿ø ±â¹İ)
+    // í”Œë ˆì´ì–´ <-> ìŒì‹ ì¶©ëŒ ì²´í¬ (ì› ê¸°ë°˜)
     for (auto it = player.begin(); it != player.end();)
     {
         for (auto jt = foods.begin(); jt != foods.end();)
         {
-            // Áß½ÉÁ¡ °£ °Å¸® °è»ê
             float dx = jt->GetPositionX() - it->GetPositionX();
             float dy = jt->GetPositionY() - it->GetPositionY();
             float distance = std::sqrt(dx * dx + dy * dy);
 
-            // ¹İÁö¸§ ÇÕ°ú ºñ±³
             float radiusSum = jt->GetRadius() + it->GetRadius();
             if (distance <= radiusSum)
             {
-                float deltaRadius = it->GetRadius() + (jt->GetRadius()/4);
+                float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
                 it->Setradius(deltaRadius);
-                jt = foods.erase(jt); // Ãæµ¹ÇÑ À½½Ä Á¦°Å
-
+                jt = foods.erase(jt);
             }
             else
             {
@@ -105,27 +185,23 @@ void PlayScene::Update()
             }
         }
         it++;
-
     }
 
-    //Àû <-> ¸ÔÀÌ Ãæµ¹Ã¼Å© 
+    // ì  <-> ë¨¹ì´ ì¶©ëŒ ì²´í¬
     for (auto it = enemys.begin(); it != enemys.end();)
     {
         for (auto jt = foods.begin(); jt != foods.end();)
         {
-            // Áß½ÉÁ¡ °£ °Å¸® °è»ê
             float dx = jt->GetPositionX() - it->GetPositionX();
             float dy = jt->GetPositionY() - it->GetPositionY();
             float distance = std::sqrt(dx * dx + dy * dy);
 
-            // ¹İÁö¸§ ÇÕ°ú ºñ±³
             float radiusSum = jt->GetRadius() + it->GetRadius();
             if (distance <= radiusSum)
             {
-                float deltaRadius = it->GetRadius() + (jt->GetRadius()/4);
+                float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
                 it->Setradius(deltaRadius);
-                jt = foods.erase(jt); // Ãæµ¹ÇÑ À½½Ä Á¦°Å
-               
+                jt = foods.erase(jt);
             }
             else
             {
@@ -133,19 +209,49 @@ void PlayScene::Update()
             }
         }
         it++;
-        
     }
 
-    //50°³·Î °è¼Ó ¾÷µ¥ÀÌÆ®
-    if (foods.size() <= FOOD_SIZE)
+    // í”Œë ˆì´ì–´ <-> ì  ì¶©ëŒ ì²´í¬
+    std::vector<Player*> playersToRemove;
+    for (auto& p : player) {
+        for (auto& e : enemys) {
+            float dx = e.GetPositionX() - p.GetPositionX();
+            float dy = e.GetPositionY() - p.GetPositionY();
+            float distance = std::sqrt(dx * dx + dy * dy);
+            float radiusSum = e.GetRadius() + p.GetRadius();
+            if (distance <= radiusSum && e.GetRadius() > p.GetRadius()) {
+                playersToRemove.push_back(&p);
+            }
+        }
+    }
+    for (auto* p : playersToRemove) {
+        player.erase(std::find_if(player.begin(), player.end(),
+            [p](const Player& pl) { return &pl == p; }));
+    }
+
+    // 1ì´ˆë§ˆë‹¤ ìŒì‹ 1ê°œ ìƒì„±
+    if (foodSpawnTimer >= 1.0f && foods.size() < FOOD_SIZE)
     {
         Food obj;
-        obj.SetPosition(widthUid(rd), heightUid(rd));
+        float x, y;
+        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+        obj.SetPosition(x, y);
         foods.push_back(obj);
+        foodSpawnTimer = 0.0f; // íƒ€ì´ë¨¸ ë¦¬ì…‹
+    }
+    // 20ì´ˆë§ˆë‹¤ ì  ì¶”ê°€
+    if (enemySpawnTimer >= 20.0f)
+    {
+        Enemy obj;
+        float x, y;
+        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+        obj.SetPosition(x, y);
+        obj.SetLeader(true);
+        enemys.push_back(obj);
+        enemySpawnTimer = 0.0f; // íƒ€ì´ë¨¸ ë¦¬ì…‹
     }
 
-    
-    // ÇÃ·¹ÀÌ¾î ºĞ¿­
+    // í”Œë ˆì´ì–´ ë¶„ì—´
     if (Input::GetKeyDown(eKeyCode::LButton) && !player.empty()) {
         POINT mousePos;
         mousePos.x = Input::GetMousePosition().x;
@@ -156,19 +262,18 @@ void PlayScene::Update()
         for (auto it = player.begin(); it != player.end(); ++it) {
             float radius = it->GetRadius();
 
-            // ÃÖ¼Ò ºĞ¿­ ¹İÁö¸§ 25
             if (radius < 25.0f) {
                 continue;
             }
 
-            float newRadius = radius / 2.0f; // ¹İÁö¸§ ¹İÀ¸·Î
-            it->Setradius(newRadius); // ±âÁ¸ ÇÃ·¹ÀÌ¾î ¹İÁö¸§ ¼³Á¤ (¼Óµµ ÀÚµ¿ °è»ê)
+            float newRadius = radius / 2.0f;
+            it->Setradius(newRadius);
 
             Player newPlayer;
-            newPlayer.Setradius(newRadius); // »õ ÇÃ·¹ÀÌ¾î ¹İÁö¸§ ¼³Á¤ (¼Óµµ ÀÚµ¿ °è»ê)
-            newPlayer.SetColor(it->GetColor()); // »ö»ó º¹»ç
+            newPlayer.Setradius(newRadius);
+            newPlayer.SetColor(it->GetColor());
             newPlayer.SetSpeed(it->GetSpeed());
-            newPlayer.OnSplit(); // ºĞ¿­ »óÅÂ È°¼ºÈ­
+            newPlayer.OnSplit();
 
             float x = it->GetPositionX();
             float y = it->GetPositionY();
@@ -195,49 +300,39 @@ void PlayScene::Update()
         }
     }
 
-    //ÇÃ·¹ÀÌ¾î ÇÕÄ¡±â
+    // í”Œë ˆì´ì–´ í•©ì¹˜ê¸°
     for (int i = 1; i < player.size(); ++i)
     {
-        std::cout << (int)player[i].GetSplitTime() << std::endl;
-
-        if ((int)player[i].GetSplitTime() >= 3 && player.size() > 1) // 
+        if ((int)player[i].GetSplitTime() >= 3 && player.size() > 1)
         {
-            auto basePlayer = player.begin(); // ±âÁØ ÇÃ·¹ÀÌ¾î (Ã¹ ¹øÂ° ÇÃ·¹ÀÌ¾î)
+            auto basePlayer = player.begin();
             for (auto it = std::next(player.begin()); it != player.end();)
             {
-                // ±âÁØ ÇÃ·¹ÀÌ¾î ¹æÇâÀ¸·Î ÀÌµ¿
                 float dx = basePlayer->GetPositionX() - it->GetPositionX();
                 float dy = basePlayer->GetPositionY() - it->GetPositionY();
                 float distance = std::sqrt(dx * dx + dy * dy);
 
-                if (distance < 0.1f) // ³Ê¹« °¡±î¿ì¸é ÀÌµ¿ »ı·«
+                if (distance < 0.1f)
                 {
                     ++it;
                     continue;
                 }
 
-                // ¹æÇâ º¤ÅÍ Á¤±ÔÈ­
                 dx /= distance;
                 dy /= distance;
 
-                // ÇÃ·¹ÀÌ¾î ¼Óµµ ±â¹İÀ¸·Î ÀÌµ¿
-                float moveSpeed = it->GetSpeed() * Time::DeltaTime();
+                float moveSpeed = it->GetSpeed() * 2 * Time::DeltaTime();
                 it->SetPosition(
                     it->GetPositionX() + dx * moveSpeed,
                     it->GetPositionY() + dy * moveSpeed
                 );
 
-                // Ãæµ¹ Ã¼Å©
                 float radiusSum = basePlayer->GetRadius() + it->GetRadius();
                 if (distance <= radiusSum)
                 {
-                   
-                    float newRadius = basePlayer->GetRadius() + it->GetRadius();
-                    basePlayer->Setradius(newRadius);
-
-                    // ÇÕÃÄÁø ÇÃ·¹ÀÌ¾î Á¦°Å
+                    float deltaRadius = basePlayer->GetRadius() + (it->GetRadius());
+                    basePlayer->Setradius(deltaRadius);
                     it = player.erase(it);
-
                 }
                 else
                 {
@@ -246,14 +341,12 @@ void PlayScene::Update()
             }
         }
     }
-    
-    
-    
-    // Àû ºĞ¿­
+
+    // ì  ë¶„ì—´
     std::vector<Enemy> newEnemies;
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
-        if (it->GetRadius() > 70.0f)
+        if (it->GetRadius() > 50.0f)
         {
             float radius = it->GetRadius();
 
@@ -268,15 +361,14 @@ void PlayScene::Update()
             newEnemy.Setradius(newRadius);
             newEnemy.SetColor(it->GetColor());
             newEnemy.OnSplit();
-
+            newEnemy.SetLeader(false);
+            newEnemy.SetId(it->GetId());
             float x = it->GetPositionX();
             float y = it->GetPositionY();
 
-            // ±âÁ¸ ÀûÀÇ ¹æÇâ º¤ÅÍ »ç¿ë
-            float dirX = it->GetDirectionX();  // Enemy Å¬·¡½º¿¡ ÀÖ¾î¾ß ÇÔ
+            float dirX = it->GetDirectionX();
             float dirY = it->GetDirectionY();
 
-            // ¹æÇâ º¤ÅÍ Á¤±ÔÈ­ (¾È µÇ¾î ÀÖÀ¸¸é)
             float length = std::sqrt(dirX * dirX + dirY * dirY);
             if (length != 0.0f) {
                 dirX /= length;
@@ -295,9 +387,9 @@ void PlayScene::Update()
         enemys.push_back(newEnemy);
     }
 
-    //ÇÃ·¹ÀÌ¾î <-> ÇÃ·¹ÀÌ¾î Ãæµ¹Ã³¸®
+    // í”Œë ˆì´ì–´ <-> í”Œë ˆì´ì–´ ì¶©ëŒ ì²˜ë¦¬
     for (int i = 0; i < player.size(); ++i) {
-        for (int j = i + 1; j < player.size(); ++j) 
+        for (int j = i + 1; j < player.size(); ++j)
         {
             float dx = player[j].GetPositionX() - player[i].GetPositionX();
             float dy = player[j].GetPositionY() - player[i].GetPositionY();
@@ -307,58 +399,73 @@ void PlayScene::Update()
             if (distance < radiusSum && distance > 0.0f) {
                 float overlap = radiusSum - distance;
 
-                // Á¤±ÔÈ­
                 float nx = dx / distance;
                 float ny = dy / distance;
 
-                // ¹Ğ¾î³»±â - °¢ ÇÃ·¹ÀÌ¾î¸¦ ¹İ¾¿ ÀÌµ¿
                 float pushX = nx * (overlap / 2.0f);
                 float pushY = ny * (overlap / 2.0f);
-                
-              
 
                 player[i].SetPosition(player[i].GetPositionX() - pushX, player[i].GetPositionY() - pushY);
                 player[j].SetPosition(player[j].GetPositionX() + pushX, player[j].GetPositionY() + pushY);
             }
         }
     }
-    
-     
 
-    //ÇÃ·¹ÀÌ¾î ¾÷µ¥ÀÌÆ®
-    int cnt = 0;
+    // ì  <-> ì  ì¶©ëŒì²˜ë¦¬
+    for (int i = 0; i < enemys.size(); ++i) {
+        for (int j = i + 1; j < enemys.size(); ++j)
+        {
+            float dx = enemys[j].GetPositionX() - enemys[i].GetPositionX();
+            float dy = enemys[j].GetPositionY() - enemys[i].GetPositionY();
+            float distance = std::sqrt(dx * dx + dy * dy);
+            float radiusSum = enemys[i].GetRadius() + enemys[j].GetRadius();
+
+            if (distance < radiusSum && distance > 0.0f) {
+                float overlap = radiusSum - distance;
+
+                float nx = dx / distance;
+                float ny = dy / distance;
+
+                float pushX = nx * (overlap / 2.0f);
+                float pushY = ny * (overlap / 2.0f);
+
+                enemys[i].SetPosition(enemys[i].GetPositionX() - pushX, enemys[i].GetPositionY() - pushY);
+                enemys[j].SetPosition(enemys[j].GetPositionX() + pushX, enemys[j].GetPositionY() + pushY);
+            }
+        }
+    }
+
+    // í”Œë ˆì´ì–´ ì—…ë°ì´íŠ¸
     for (auto it = player.begin(); it != player.end(); ++it)
     {
         it->Update();
-        std::cout << cnt << "¹øÂ° :  " << it->GetSpeed() << std::endl;
-        cnt++;
     }
-    cnt = 0;
-    //Çªµå ¾÷µ¥ÀÌÆ®
+
+    // í‘¸ë“œ ì—…ë°ì´íŠ¸
     for (auto it = foods.begin(); it != foods.end(); ++it)
     {
         it->Update();
     }
 
-    //Àû ¾÷µ¥ÀÌÆ®
+    // ì  ì—…ë°ì´íŠ¸
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
-        it->Update(foods ,player);
+        it->Update(foods, player, enemys);
     }
 
-    //Æ®·¦ ¾÷µ¥ÀÌÆ®
+    // íŠ¸ë© ì—…ë°ì´íŠ¸
     for (auto it = traps.begin(); it != traps.end(); ++it)
     {
         it->Update();
     }
 
-    //Á¡º¸ ¾÷µ¥ÀÌÆ®
+    // ì ë³´ ì—…ë°ì´íŠ¸
     for (auto it = jumbos.begin(); it != jumbos.end(); ++it)
     {
         it->Update();
     }
 
-	camera.Update(&player[0]); // Ä«¸Ş¶ó ¾÷µ¥ÀÌÆ® (Ã¹ ¹øÂ° ÇÃ·¹ÀÌ¾î¸¦ ±âÁØÀ¸·Î)
+    camera.Update(&player[0]); // ì¹´ë©”ë¼ ì—…ë°ì´íŠ¸ (ì²« ë²ˆì§¸ í”Œë ˆì´ì–´ë¥¼ ê¸°ì¤€ìœ¼ë¡œ)
 }
 
 void PlayScene::LateUpdate()
@@ -368,41 +475,41 @@ void PlayScene::LateUpdate()
 
 void PlayScene::Render(HDC hdc)
 {
-   
-
-    // ÇÃ·¹ÀÌ¾î ·»´õ¸µ
+    // í”Œë ˆì´ì–´ ë Œë”ë§
     for (auto it = player.begin(); it != player.end(); ++it)
     {
         it->Render(hdc);
     }
 
-    // À½½Ä °´Ã¼ ·»´õ¸µ
+    // ìŒì‹ ê°ì²´ ë Œë”ë§
     for (auto it = foods.begin(); it != foods.end(); ++it)
     {
         it->Render(hdc);
     }
 
-    // Àû °´Ã¼ ·»´õ¸µ
+    // ì  ê°ì²´ ë Œë”ë§
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
         it->Render(hdc);
     }
 
-    // Æ®·¦ °´Ã¼ ·»´õ¸µ
+    // íŠ¸ë© ê°ì²´ ë Œë”ë§
     for (auto it = traps.begin(); it != traps.end(); ++it)
     {
         it->Render(hdc);
     }
 
-    // Á¡º¸ °´Ã¼ ·»´õ¸µ
+    // ì ë³´ ê°ì²´ ë Œë”ë§
     for (auto it = jumbos.begin(); it != jumbos.end(); ++it)
     {
         it->Render(hdc);
     }
-	camera.Render(hdc); // Ä«¸Ş¶ó ·»´õ¸µ
-    
 
-    // ¸¶¿ì½º ÁÂÇ¥ Ãâ·Â
+    if (!player.empty()) {
+        camera.Update(&player[0]);
+    }
+
+    // ë§ˆìš°ìŠ¤ ì¢Œí‘œ ì¶œë ¥
     WCHAR Text[100];
     wsprintf(Text, L"X : %d Y : %d", (int)Input::GetMousePosition().x, (int)Input::GetMousePosition().y);
     TextOut(hdc, Input::GetMousePosition().x + 10, Input::GetMousePosition().y, Text, lstrlen(Text));
@@ -411,6 +518,6 @@ void PlayScene::Render(HDC hdc)
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
 
-    wsprintf(TimeText, L"Play Time: %02dºĞ : %02dÃÊ", minutes, seconds);
+    wsprintf(TimeText, L"Play Time: %02dë¶„ : %02dì´ˆ", minutes, seconds);
     TextOut(hdc, 10, 10, TimeText, lstrlen(TimeText));
 }

@@ -1,4 +1,4 @@
-#include "Enemy.h"
+ï»¿#include "Enemy.h"
 #include "Time.h"
 
 using namespace Gdiplus;
@@ -9,108 +9,145 @@ Enemy::Enemy()
 	mY = 0;
 	rect = { (int)(mX - radius), (int)(mY - radius),(int)(mX + radius),(int)(rect.bottom = mY + radius) };
 	color = RGB(255, 0, 0);
+    radius = 30.0f;
     detectPlayerRange = radius * 2.5f;
-	PlayerDetect = false; 
-	radius = 30.0f;
+	PlayerDetect = false;
+    leader = false;
 	speed = 100.0f;
 }
 
-void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players)
+void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players, std::vector<Enemy>& enemies)
 {
-    // Update the collision rectangle
+    // ì¶©ëŒ ì‚¬ê°í˜• ì—…ë°ì´íŠ¸
     rect.left = mX - radius;
     rect.right = mX + radius;
     rect.top = mY - radius;
     rect.bottom = mY + radius;
 
-    if (foods.empty()) return; // No food to chase
+    if (foods.empty()) return; // ì¶”ì í•  ìŒì‹ ì—†ìŒ
 
-    bool PlayerDetect = false;
+    bool playerDetected = false;
     Player* closestPlayer = nullptr;
     float closestPlayerDistance = FLT_MAX;
 
-    for (auto it = players.begin(); it != players.end();)
+    // ëª¨ë“  ì (ë¦¬ë”, ë¹„ë¦¬ë” ìƒê´€ì—†ì´) í”Œë ˆì´ì–´ ê°ì§€
+    for (auto& player : players)
     {
-        // Áß½ÉÁ¡ °£ °Å¸® °è»ê
-        float dx = it->GetPositionX() - mX;
-        float dy = it->GetPositionY() - mY;
+        float dx = player.GetPositionX() - mX;
+        float dy = player.GetPositionY() - mY;
         float distance = std::sqrt(dx * dx + dy * dy);
 
-        // ¹İÁö¸§ ÇÕ°ú ºñ±³
-        float radiusSum = it->GetRadius() + detectPlayerRange;
-        if (distance <= radiusSum) //¾È¿¡ ÀÖ¾î ±×·¯¸é ÇÃ·¹ÀÌ¾î¸¦ ÃßÀû
+        float radiusSum = player.GetRadius() + detectPlayerRange;
+        if (distance <= radiusSum)
         {
-            PlayerDetect = true;
+            playerDetected = true;
             if (distance < closestPlayerDistance)
             {
                 closestPlayerDistance = distance;
-                closestPlayer = &(*it);
+                closestPlayer = &player;
             }
         }
-        it++;
     }
 
-    float closestDistance = FLT_MAX;
-    Food* closestFood = nullptr;
-
-    for (Food& food : foods)
+    // ë¹„ë¦¬ë”ê°€ í”Œë ˆì´ì–´ë¥¼ ê°ì§€í–ˆì„ ê²½ìš° ë¦¬ë” ë³€ê²½
+    if (playerDetected && !leader && closestPlayer)
     {
-        float dx = food.GetPositionX() - mX;
-        float dy = food.GetPositionY() - mY;
-        float distance = sqrt(dx * dx + dy * dy);
-
-        if (distance < closestDistance)
+        // ê¸°ì¡´ ë¦¬ë” ì°¾ì•„ì„œ ë¦¬ë” ìƒíƒœ í•´ì œ
+        for (auto& enemy : enemies)
         {
-            closestDistance = distance;
-            closestFood = &food;
+            if (enemy.GetId() == id && enemy.GetLeaderFlag())
+            {
+                enemy.SetLeader(false); // ê¸°ì¡´ ë¦¬ë”ì˜ ë¦¬ë” ìƒíƒœ ì œê±°
+                break;
+            }
         }
+        // í˜„ì¬ ê°ì²´ë¥¼ ë¦¬ë”ë¡œ ì„¤ì •
+        SetLeader(true);
     }
 
-    if (PlayerDetect == false)
+    if (leader)
     {
-        if (closestFood)
+        // ê°€ì¥ ê°€ê¹Œìš´ ìŒì‹ ì°¾ê¸°
+        float closestDistance = FLT_MAX;
+        Food* closestFood = nullptr;
+        for (Food& food : foods)
         {
-            // Calculate direction to the closest food
-            float dx = closestFood->GetPositionX() - mX;
-            float dy = closestFood->GetPositionY() - mY;
+            float dx = food.GetPositionX() - mX;
+            float dy = food.GetPositionY() - mY;
             float distance = sqrt(dx * dx + dy * dy);
 
-            // Normalize direction and move enemy
-            if (distance > 0) // Prevent division by zero
+            if (distance < closestDistance)
             {
-                float directionX = dx / distance;
-                float directionY = dy / distance;
-
-                SetDirection(directionX, directionY);
-
-                // Move enemy based on speed and time delta
-                mX += directionX * speed * Time::DeltaTime();
-                mY += directionY * speed * Time::DeltaTime();
+                closestDistance = distance;
+                closestFood = &food;
             }
         }
-    }
-    else
-    {
-        //ÇÃ·¹ÀÌ¾î ÂÊÀ¸·Î ÀÌµ¿ 
-        if (closestPlayer)
+
+        // ë°©í–¥ ì„¤ì • 
+        if (playerDetected && closestPlayer)
         {
             float dx = closestPlayer->GetPositionX() - mX;
             float dy = closestPlayer->GetPositionY() - mY;
             float distance = sqrt(dx * dx + dy * dy);
 
-            if (distance > 0) // 0À¸·Î ³ª´©±â ¹æÁö
+            if (distance > 0.1f) // 0ìœ¼ë¡œ ë‚˜ëˆ„ê¸° ë°©ì§€
             {
                 float directionX = dx / distance;
                 float directionY = dy / distance;
-
                 SetDirection(directionX, directionY);
+            }
+        }
+        else if (closestFood)
+        {
+            float dx = closestFood->GetPositionX() - mX;
+            float dy = closestFood->GetPositionY() - mY;
+            float distance = sqrt(dx * dx + dy * dy);
 
-                // ¼Óµµ¿Í ½Ã°£ µ¨Å¸¸¦ ±â¹İÀ¸·Î Àû ÀÌµ¿
-                mX += directionX * speed * Time::DeltaTime();
-                mY += directionY * speed * Time::DeltaTime();
+            if (distance > 0.1f)
+            {
+                float directionX = dx / distance;
+                float directionY = dy / distance;
+                SetDirection(directionX, directionY);
             }
         }
     }
+    else // ë¹„ë¦¬ë”: ê°™ì€ IDë¥¼ ê°€ì§„ ë¦¬ë” ë”°ë¼ê°€ê¸°
+    {
+        Enemy* leaderEnemy = nullptr;
+        for (auto& enemy : enemies)
+        {
+            if (enemy.GetId() == id && enemy.GetLeaderFlag())
+            {
+                leaderEnemy = &enemy;
+                break;
+            }
+        }
+
+        if (leaderEnemy)
+        {
+            float dx = leaderEnemy->GetPositionX() - mX;
+            float dy = leaderEnemy->GetPositionY() - mY;
+            float distance = sqrt(dx * dx + dy * dy);
+
+            if (distance > 0.1f) // 0ìœ¼ë¡œ ë‚˜ëˆ„ê¸° ë°©ì§€
+            {
+                float directionX = dx / distance;
+                float directionY = dy / distance;
+                SetDirection(directionX, directionY);
+            }
+        }
+    }
+
+    // ìœ„ì¹˜ ì—…ë°ì´íŠ¸ (ë¦¬ë”ì™€ ë¹„ë¦¬ë” ëª¨ë‘)
+    float moveSpeed = speed * Time::DeltaTime();
+    mX += dirX * moveSpeed;
+    mY += dirY * moveSpeed;
+
+    // ì¶©ëŒ ì‚¬ê°í˜• ì—…ë°ì´íŠ¸
+    rect.left = (int)(mX - radius);
+    rect.right = (int)(mX + radius);
+    rect.top = (int)(mY - radius);
+    rect.bottom = (int)(mY + radius);
 }
 
 void Enemy::LateUpdate()
@@ -123,22 +160,22 @@ void Enemy::Render(HDC hdc)
 	Graphics graphics(hdc);
 	graphics.SetSmoothingMode(SmoothingModeAntiAlias);
     graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
-	// GDI+ »ö»ó °´Ã¼ »ı¼º
+	// GDI+ ìƒ‰ìƒ ê°ì²´ ìƒì„±
     Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
     SolidBrush brush(gdiBrushColor);
     Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
     Pen pen(gdiPenColor, 4);
-	// µğ¹ö±ë¿ë »ç°¢Çü(Ãæµ¹¿µ¿ª)
+	// ë””ë²„ê¹…ìš© ì‚¬ê°í˜•(ì¶©ëŒì˜ì—­)
 	//Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
 
-	// »ç°¢Çü ¾È¿¡ ¿ø ±×¸®±â
-	INT ellipseWidth = rect.right - rect.left; //³Êºñ
-	INT ellipseHeight = rect.bottom - rect.top; //³ôÀÌ
+	// ì‚¬ê°í˜• ì•ˆì— ì› ê·¸ë¦¬ê¸°
+	INT ellipseWidth = rect.right - rect.left; //ë„ˆë¹„
+	INT ellipseHeight = rect.bottom - rect.top; //ë†’ì´
 	graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
     graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
 
-    // ÇÃ·¹ÀÌ¾î °¨Áö ¹üÀ§ ·»´õ¸µ (»¡°£ ¼±)
-    Pen detectPen(Color(255, 0, 0), 2); // »¡°£»ö, µÎ²² 2
+    // í”Œë ˆì´ì–´ ê°ì§€ ë²”ìœ„ ë Œë”ë§ (ë¹¨ê°„ ì„ )
+    Pen detectPen(Color(255, 0, 0), 2); // ë¹¨ê°„ìƒ‰, ë‘ê»˜ 2
     float detectDiameter = detectPlayerRange * 2.0f;
     float detectLeft = mX - detectPlayerRange;
     float detectTop = mY - detectPlayerRange;
@@ -150,13 +187,13 @@ void Enemy::Setradius(float r)
 {
     radius = r;
 
-    float scale = BASE_RADIUS / radius; // ¹İÁö¸§ ºñÀ²
+    float scale = BASE_RADIUS / radius; // ë°˜ì§€ë¦„ ë¹„ìœ¨
     speed = BASE_SPEED * scale;
 	detectPlayerRange = radius * 2.5f;
-    // ¼Óµµ Á¦ÇÑ
+    // ì†ë„ ì œí•œ
     speed = (std::max)(MIN_SPEED, (std::min)(MAX_SPEED, speed));
 
-    // Ãæµ¹ ¿µ¿ª ¾÷µ¥ÀÌÆ®
+    // ì¶©ëŒ ì˜ì—­ ì—…ë°ì´íŠ¸
     rect.left = (int)(mX - radius);
     rect.right = (int)(mX + radius);
     rect.top = (int)(mY - radius);

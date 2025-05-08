@@ -17,6 +17,8 @@ private:
     std::vector<Player> player;
 	Camera camera;
     float PlayTime;
+    float foodSpawnTimer;
+    float enemySpawnTimer;
 
 public:
     PlayScene();
