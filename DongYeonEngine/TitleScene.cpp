@@ -35,7 +35,7 @@ TitleScene::~TitleScene()
 void TitleScene::Initialize()
 {
     // 이미지 로드
-    mBackgroundImage = new Gdiplus::Image(L"resources/AgarioTitle.png");
+    mBackgroundImage = new Gdiplus::Image(L"resources/Agario.png");
 }
 
 void TitleScene::Update()
@@ -49,7 +49,7 @@ void TitleScene::Update()
     }
 
     // 알파 타이머 업데이트 (페이드 효과를 위해)
-    mAlphaTimer += 0.4f; // 속도 조절 (값이 클수록 빠르게 깜빡임)
+    mAlphaTimer += 0.3f; // 속도 조절 (값이 클수록 빠르게 깜빡임)
     if (mAlphaTimer > 2.0f * 3.14159f) // 2π 주기로 반복
         mAlphaTimer -= 2.0f * 3.14159f;
 }
