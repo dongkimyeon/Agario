@@ -109,6 +109,7 @@ void PlayScene::Reset()
     foodSpawnTimer = 0.0f;
     enemySpawnTimer = 0.0f;
     trapSpawnTimer = 0.0f;
+    enemySplitTimer = 0.0f;
     trapCnt = TRAP_SIZE;
     enemyCnt = 0;
     eatCnt = 0;
@@ -118,7 +119,7 @@ void PlayScene::Reset()
     endSec = 0;
     maxSize = 0;
     endEatCnt = 0;
-
+    allowEnemySplit = false;
     // 음식 객체 초기화
     while (foods.size() < FOOD_SIZE)
     {
@@ -219,10 +220,21 @@ void PlayScene::Update()
     }
     
     // 플레이타임 갱신
+    enemySplitTimer += Time::DeltaTime();
     PlayTime += Time::DeltaTime();
     foodSpawnTimer += Time::DeltaTime();
     enemySpawnTimer += Time::DeltaTime();
     trapSpawnTimer += Time::DeltaTime();
+
+    // 5초마다 분열 확률 평가
+    static std::uniform_int_distribution<int> splitChance(1, 4); // 25% 확률
+    if (enemySplitTimer >= 2.0f)
+    {
+        allowEnemySplit = (splitChance(gen) == 1); // 25% 확률로 분열 허용
+        enemySplitTimer = 0.0f; // 타이머 초기화
+        std::cout << "Enemy split chance evaluated: allowEnemySplit = " << allowEnemySplit << std::endl;
+    }
+
 
     for (int i = 0; i < player.size(); ++i)
     {
@@ -409,6 +421,7 @@ void PlayScene::Update()
         traps.push_back(obj);
         trapSpawnTimer = 0.0f;
     }
+
     // 플레이어 <-> 플레이어 충돌 처리
     if (!player.empty()) {
         for (int i = 0; i < player.size(); ++i) {
@@ -480,12 +493,14 @@ void PlayScene::Update()
         }
     }
 
+    
     // 적 분열
     std::vector<Enemy> newEnemies;
     for (auto it = enemys.begin(); it != enemys.end(); ++it)
     {
-        if (it->GetRadius() > 50.0f)
+        if (it->GetRadius() > 30.0f && allowEnemySplit)
         {
+            allowEnemySplit = false;
             float radius = it->GetRadius();
             if (radius < 25.0f) {
                 continue;
@@ -498,25 +513,22 @@ void PlayScene::Update()
             newEnemy.Setradius(newRadius);
             newEnemy.SetColor(it->GetColor());
             newEnemy.SetSpeed(it->GetSpeed());
-            newEnemy.SetDirection(it->GetDirectionX(), it->GetDirectionY());
-            newEnemy.SetLeader(false);
             newEnemy.SetId(it->GetId());
+            newEnemy.SetLeader(false);
+
             float x = it->GetPositionX();
             float y = it->GetPositionY();
 
-            float dirX = it->GetDirectionX();
-            float dirY = it->GetDirectionY();
-
-            float length = std::sqrt(dirX * dirX + dirY * dirY);
-            if (length != 0.0f) {
-                dirX /= length;
-                dirY /= length;
-            }
-
+            // 임의의 방향으로 분리
+            float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.1415926535f;
+            float dx = std::cos(angle);
+            float dy = std::sin(angle);
             float offset = newRadius * 2.0f;
 
-            it->SetPosition(x - dirX * offset * 0.5f, y - dirY * offset * 0.5f);
-            newEnemy.SetPosition(x + dirX * offset * 0.5f, y + dirY * offset * 0.5f);
+            it->SetPosition(x - dx * offset * 0.5f, y - dy * offset * 0.5f);
+            it->OnSplit(-dx, -dy); // 분열 방향 전달
+            newEnemy.SetPosition(x + dx * offset * 0.5f, y + dy * offset * 0.5f);
+            newEnemy.OnSplit(dx, dy); // 분열 방향 전달
 
             newEnemies.push_back(newEnemy);
         }
@@ -525,7 +537,68 @@ void PlayScene::Update()
         enemys.push_back(newEnemy);
     }
 
-   
+    // 적 합체
+    if (!enemys.empty())
+    {
+        for (auto it = enemys.begin(); it != enemys.end();)
+        {
+            if (!it->GetLeaderFlag() && it->GetSplitTime() >= 2.0f) 
+            {
+                // 같은 ID의 리더 찾기
+                Enemy* leaderEnemy = nullptr;
+                for (auto& enemy : enemys)
+                {
+                    if (enemy.GetId() == it->GetId() && enemy.GetLeaderFlag())
+                    {
+                        leaderEnemy = &enemy;
+                        break;
+                    }
+                }
+
+                if (leaderEnemy)
+                {
+                    float dx = leaderEnemy->GetPositionX() - it->GetPositionX();
+                    float dy = leaderEnemy->GetPositionY() - it->GetPositionY();
+                    float distance = std::sqrt(dx * dx + dy * dy);
+
+                    if (distance < 0.1f)
+                    {
+                        ++it;
+                        continue;
+                    }
+
+                    dx /= distance;
+                    dy /= distance;
+
+                    float moveSpeed = it->GetSpeed() * 3 * Time::DeltaTime(); // 플레이어와 동일한 속도
+                    it->SetPosition(
+                        it->GetPositionX() + dx * moveSpeed,
+                        it->GetPositionY() + dy * moveSpeed
+                    );
+
+                    float radiusSum = leaderEnemy->GetRadius() + it->GetRadius();
+                    if (distance <= radiusSum)
+                    {
+                        float deltaRadius = leaderEnemy->GetRadius() + it->GetRadius();
+                        leaderEnemy->Setradius(deltaRadius);
+                        it = enemys.erase(it); // 비리더 제거
+                    }
+                    else
+                    {
+                        ++it;
+                    }
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
 
     // 적 <-> 적 충돌처리
     if (!enemys.empty())

@@ -34,11 +34,13 @@ private:
     float foodSpawnTimer;
     float enemySpawnTimer;
     float trapSpawnTimer;
+    float enemySplitTimer; 
     float stopTimer;
     int trapCnt;
     int enemyCnt;
     int eatCnt;
     bool printFlag = true;
     bool stopFlag = false;
+    bool allowEnemySplit = false;
   
 };

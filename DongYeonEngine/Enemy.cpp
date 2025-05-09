@@ -3,35 +3,61 @@
 
 using namespace Gdiplus;
 
+
+
 Enemy::Enemy()
 {
-	mX = 0;
-	mY = 0;
-	rect = { (int)(mX - radius), (int)(mY - radius),(int)(mX + radius),(int)(rect.bottom = mY + radius) };
-	color = RGB(255, 0, 0);
+    mX = 0;
+    mY = 0;
+    rect = { (int)(mX - radius), (int)(mY - radius), (int)(mX + radius), (int)(mY + radius) };
+    color = RGB(255, 0, 0);
     radius = 30.0f;
     detectPlayerRange = radius * 2.5f;
-	PlayerDetect = false;
+    PlayerDetect = false;
     leader = false;
-	speed = 100.0f;
-	splitTime = 0.0f;
+    speed = 100.0f;
+    splitTime = 0.0f;
+    isSplit = false;
+    isBoost = false;
+    timeSinceSplit = 0.0f;
+    id = 0;
+    splitDirX = 0.0f; // 분열 방향 초기화
+    splitDirY = 0.0f;
 }
 
 void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players, std::vector<Enemy>& enemies)
 {
+    // 분열 중 속도 부스트
+    if (isSplit && isBoost)
+    {
+        timeSinceSplit += Time::DeltaTime();
+        if (timeSinceSplit >= boostTime)
+        {
+            isBoost = false;
+            timeSinceSplit = 0.0f;
+            Setradius(radius); // 반지름 기반으로 속도 재설정
+        }
+        else
+        {
+            // 부스트 속도: 기본 속도의 2배, 최대 속도 제한
+            float boostedSpeed = (std::min)(speed * 2.0f, MAX_SPEED);
+            speed = boostedSpeed;
+        }
+    }
+
     // 충돌 사각형 업데이트
     rect.left = mX - radius;
     rect.right = mX + radius;
     rect.top = mY - radius;
     rect.bottom = mY + radius;
 
-    if (foods.empty()) return; // 추적할 음식 없음
+    if (foods.empty()) return;
 
     bool playerDetected = false;
     Player* closestPlayer = nullptr;
     float closestPlayerDistance = FLT_MAX;
 
-    // 모든 적(리더, 비리더 상관없이) 플레이어 감지
+    // 플레이어 감지
     for (auto& player : players)
     {
         float dx = player.GetPositionX() - mX;
@@ -50,25 +76,23 @@ void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players, std::
         }
     }
 
-    // 비리더가 플레이어를 감지했을 경우 리더 변경
+    // 비리더가 플레이어 감지 시 리더 변경
     if (playerDetected && !leader && closestPlayer)
     {
-        // 기존 리더 찾아서 리더 상태 해제
         for (auto& enemy : enemies)
         {
             if (enemy.GetId() == id && enemy.GetLeaderFlag())
             {
-                enemy.SetLeader(false); // 기존 리더의 리더 상태 제거
+                enemy.SetLeader(false);
                 break;
             }
         }
-        // 현재 객체를 리더로 설정
         SetLeader(true);
     }
 
+    // 방향 설정
     if (leader)
     {
-        // 가장 가까운 음식 찾기
         float closestDistance = FLT_MAX;
         Food* closestFood = nullptr;
         for (Food& food : foods)
@@ -84,14 +108,13 @@ void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players, std::
             }
         }
 
-        // 방향 설정 
         if (playerDetected && closestPlayer)
         {
             float dx = closestPlayer->GetPositionX() - mX;
             float dy = closestPlayer->GetPositionY() - mY;
             float distance = sqrt(dx * dx + dy * dy);
 
-            if (distance > 0.1f) // 0으로 나누기 방지
+            if (distance > 0.1f)
             {
                 float directionX = dx / distance;
                 float directionY = dy / distance;
@@ -112,43 +135,50 @@ void Enemy::Update(std::vector<Food>& foods, std::vector<Player>& players, std::
             }
         }
     }
-    else // 비리더: 같은 ID를 가진 리더 따라가기
+    else
     {
-        Enemy* leaderEnemy = nullptr;
-        for (auto& enemy : enemies)
+        // 부스트 시간 동안 분열 방향 사용
+        if (isBoost && timeSinceSplit < boostTime)
         {
-            if (enemy.GetId() == id && enemy.GetLeaderFlag())
-            {
-                leaderEnemy = &enemy;
-                break;
-            }
+            SetDirection(splitDirX, splitDirY);
         }
-
-        if (leaderEnemy)
+        else
         {
-            float dx = leaderEnemy->GetPositionX() - mX;
-            float dy = leaderEnemy->GetPositionY() - mY;
-            float distance = sqrt(dx * dx + dy * dy);
-
-            if (distance > 0.1f) // 0으로 나누기 방지
+            Enemy* leaderEnemy = nullptr;
+            for (auto& enemy : enemies)
             {
-                float directionX = dx / distance;
-                float directionY = dy / distance;
-                SetDirection(directionX, directionY);
+                if (enemy.GetId() == id && enemy.GetLeaderFlag())
+                {
+                    leaderEnemy = &enemy;
+                    break;
+                }
+            }
+
+            if (leaderEnemy)
+            {
+                float dx = leaderEnemy->GetPositionX() - mX;
+                float dy = leaderEnemy->GetPositionY() - mY;
+                float distance = sqrt(dx * dx + dy * dy);
+
+                if (distance > 0.1f)
+                {
+                    float directionX = dx / distance;
+                    float directionY = dy / distance;
+                    SetDirection(directionX, directionY);
+                }
             }
         }
     }
 
-    // 위치 업데이트 (리더와 비리더 모두)
+    // 위치 업데이트
     float moveSpeed = speed * Time::DeltaTime();
     mX += dirX * moveSpeed;
     mY += dirY * moveSpeed;
 
-    // 클라이언트 영역(1600x800) 경계 제한
+    // 클라이언트 영역 경계 제한
     const int CLIENT_WIDTH = 1600;
     const int CLIENT_HEIGHT = 800;
 
-    // 적 중심(mX, mY)이 경계를 벗어나지 않도록 제한
     mX = (std::max)(radius, (std::min)((float)CLIENT_WIDTH - radius, mX));
     mY = (std::max)(radius, (std::min)((float)CLIENT_HEIGHT - radius, mY));
 
