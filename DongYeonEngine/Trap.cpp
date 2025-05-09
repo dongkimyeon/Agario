@@ -112,6 +112,7 @@ void Trap::Render(HDC hdc)
         path.AddPolygon(spikePoints, 3);
     }
 
+  
     // ³»ºÎ ¿ø
     graphics.FillEllipse(&brush, centerX - radius, centerY - radius, radius * 2, radius * 2);
     graphics.DrawEllipse(&pen, centerX - radius, centerY - radius, radius * 2, radius * 2);
@@ -129,6 +130,11 @@ float Trap::GetPositionX()
 float Trap::GetPositionY()
 {
 	return mY;
+}
+
+float Trap::GetRadius()
+{
+    return radius;
 }
 
 

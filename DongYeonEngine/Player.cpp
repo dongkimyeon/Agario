@@ -29,6 +29,7 @@ void Player::Update()
         {
             isBoost = false;
             timeSinceSplit = 0.0f;
+            isSplit = false;
             Setradius(radius); // 반지름 기반으로 속도 재설정
         }
         else

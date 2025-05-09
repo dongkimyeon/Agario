@@ -33,6 +33,7 @@ public:
 	}
 	float GetPositionX() override;
 	float GetPositionY() override;
+	float GetRadius() override;
 	
 private:
 	float mX;
