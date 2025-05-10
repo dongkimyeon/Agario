@@ -85,8 +85,9 @@ void SetNonOverlappingPosition(float& x, float& y, float radius, std::vector<Foo
 
 PlayScene::PlayScene()
 {
-    Reset(); // 생성자에서 Reset 호출
-    
+    Reset();
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    Gdiplus::GdiplusStartup(&mGdiplusToken, &gdiplusStartupInput, nullptr);
 }
 
 PlayScene::~PlayScene()
@@ -96,9 +97,18 @@ PlayScene::~PlayScene()
 
 void PlayScene::Initialize()
 {
-    // 추가 초기화가 필요하면 여기에
-}
+    mWarnningImage = new Gdiplus::Image(L"resources/warnning.png");
+    mWarnningImage2 = new Gdiplus::Image(L"resources/warnning2.png");
+    mWarnningImage3 = new Gdiplus::Image(L"resources/warnning3.png");
+    mWarnningImage4 = new Gdiplus::Image(L"resources/warnning4.png");
+    mWarnningImage5 = new Gdiplus::Image(L"resources/warnning5.png");
 
+    if (mWarnningImage->GetLastStatus() != Gdiplus::Ok) {
+        std::cout << "Failed to load warnning.png" << std::endl;
+        delete mWarnningImage;
+        mWarnningImage = nullptr;
+    }
+}
 void PlayScene::Reset()
 {
     // 모든 벡터 초기화
@@ -168,8 +178,8 @@ void PlayScene::Reset()
     SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
     obj.SetPosition(x, y);
     player.push_back(obj);
-   
-    
+
+
 }
 
 void PlayScene::Update()
@@ -209,7 +219,7 @@ void PlayScene::Update()
         endSec = seconds;
         endMin = minutes;
         endEatCnt = eatCnt;
-        
+
         SceneManager::LoadScene(L"EndScene");
         Reset();
 
@@ -345,7 +355,7 @@ void PlayScene::Update()
             float distance = std::sqrt(dx * dx + dy * dy);
 
             float radiusSum = jt->GetRadius() + it->GetRadius();
-            if (distance <= radiusSum) 
+            if (distance <= radiusSum)
             {
                 float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
                 it->Setradius(deltaRadius);
@@ -393,7 +403,7 @@ void PlayScene::Update()
                         endSec = seconds;
                         endMin = minutes;
                         endEatCnt = eatCnt;
-                      
+
                         SceneManager::LoadScene(L"EndScene");
                         Reset();
 
@@ -547,15 +557,24 @@ void PlayScene::Update()
         enemySpawnTimer = 0.0f;
     }
 
-    // 13. 트랩 추가
-    if (trapSpawnTimer >= 20.0f && traps.size() < TRAP_SIZE) {
+    // 트랩 추가 및 느낌표 위치 설정
+    if (trapSpawnTimer >= 8.0f && !isExclamationPositionSet) {
+        Trap tempObj;
+        exclamationX = static_cast<float>(widthUid(gen));
+        exclamationY = static_cast<float>(heightUid(gen));
+        showExclamation = true;
+        isExclamationPositionSet = true;
+    }
+    if (trapSpawnTimer >= 10.0f) {
         Trap obj;
-        float x, y;
-        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
-        obj.SetPosition(x, y);
+        obj.SetPosition(exclamationX, exclamationY);
         traps.push_back(obj);
         trapSpawnTimer = 0.0f;
+        showExclamation = false;
+
+        isExclamationPositionSet = false;
     }
+
 
     // 14. 플레이어 <-> 플레이어 충돌 처리
     if (!player.empty()) {
@@ -645,10 +664,35 @@ void PlayScene::Render(HDC hdc)
     // GDI+ Graphics 객체 생성
     Gdiplus::Graphics graphics(hdc);
     if (graphics.GetLastStatus() != Gdiplus::Ok) {
-       // std::cout << "Failed to create GDI+ Graphics object" << std::endl;
+        // std::cout << "Failed to create GDI+ Graphics object" << std::endl;
         return;
     }
-
+    INT size = 100;
+    if (showExclamation && trapSpawnTimer >= 8.0f && trapSpawnTimer <= 8.4f)
+    {
+        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
+        graphics.DrawImage(mWarnningImage, rect);
+    }
+    if (showExclamation && trapSpawnTimer > 8.4f && trapSpawnTimer <= 8.8f)
+    {
+        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
+        graphics.DrawImage(mWarnningImage2, rect);
+    }
+    if (showExclamation && trapSpawnTimer > 8.8f && trapSpawnTimer <= 9.2f)
+    {
+        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
+        graphics.DrawImage(mWarnningImage3, rect);
+    }
+    if (showExclamation && trapSpawnTimer > 9.2f && trapSpawnTimer <= 9.6f)
+    {
+        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
+        graphics.DrawImage(mWarnningImage4, rect);
+    }
+    if (showExclamation && trapSpawnTimer > 9.6f && trapSpawnTimer <= 10.0f)
+    {
+        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
+        graphics.DrawImage(mWarnningImage5, rect);
+    }
     // 플레이어 렌더링
     for (auto it = player.begin(); it != player.end(); ++it)
     {
@@ -690,27 +734,27 @@ void PlayScene::Render(HDC hdc)
         return;
     }
 
-    Gdiplus::SolidBrush brush(Gdiplus::Color(255, 255, 255, 255)); 
+    Gdiplus::SolidBrush brush(Gdiplus::Color(255, 255, 255, 255));
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentNear); // 왼쪽 정렬
 
     // 반투명 배경 사각형 (가독성 향상)
     Gdiplus::SolidBrush bgBrush(Gdiplus::Color(128, 0, 0, 0)); // 반투명 검은색
-    
+
 
     // 플레이 시간, 최대 반지름, 먹은 음식 개수 계산
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
 
     float max = 0;
-    
+
     for (auto it = player.begin(); it != player.end(); ++it)
     {
         if (it->GetRadius() > max)
             max = it->GetRadius();
     }
 
- 
+
     // 텍스트 문자열 생성
     wchar_t timeBuffer[50];
     swprintf(timeBuffer, 50, L"Play Time: %d분 %d초", minutes, seconds);
@@ -731,11 +775,11 @@ void PlayScene::Render(HDC hdc)
         graphics.DrawString(timeText.c_str(), -1, &font, Gdiplus::PointF(10.0f, 10.0f), &format, &brush);
         graphics.DrawString(radiusText.c_str(), -1, &font, Gdiplus::PointF(10.0f, 40.0f), &format, &brush);
         graphics.DrawString(eatCntText.c_str(), -1, &font, Gdiplus::PointF(10.0f, 70.0f), &format, &brush);
-      
+
 
     }
-    
-    Gdiplus::SolidBrush brush2(Gdiplus::Color(255, 0,0 , 0)); //마우스 검은색
+
+    Gdiplus::SolidBrush brush2(Gdiplus::Color(255, 0, 0, 0)); //마우스 검은색
     //// 마우스 좌표 출력
     //std::wstring mouseText = L"X: " + std::to_wstring((int)Input::GetMousePosition().x) +
     //                         L" Y: " + std::to_wstring((int)Input::GetMousePosition().y);

@@ -23,6 +23,7 @@ private:
     bool ExitButtonCheck;
     RECT ExitButton;
 	RECT startButton; 
+
     ULONG_PTR mGdiplusToken;         // GDI+ ÅäÅ«
 
 };

@@ -30,6 +30,19 @@ private:
     std::vector<Jumbo> jumbos;
     std::vector<Player> player;
 
+	Gdiplus::Image* mWarnningImage;
+    Gdiplus::Image* mWarnningImage2;
+	Gdiplus::Image* mWarnningImage3;
+	Gdiplus::Image* mWarnningImage4;
+	Gdiplus::Image* mWarnningImage5;
+
+    bool showExclamation = false; // ´À³¦Ç¥ Ç¥½Ã ¿©ºÎ
+    float exclamationX = 0.0f; // ´À³¦Ç¥ X ÁÂÇ¥
+    float exclamationY = 0.0f; // ´À³¦Ç¥ Y ÁÂÇ¥
+   
+
+    ULONG_PTR mGdiplusToken;         // GDI+ ÅäÅ«
+	bool isExclamationPositionSet = false; // ´À³¦Ç¥ À§Ä¡ ¼³Á¤ ¿©ºÎ
     float PlayTime;
     float foodSpawnTimer;
     float enemySpawnTimer;
