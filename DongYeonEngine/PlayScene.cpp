@@ -346,7 +346,57 @@ void PlayScene::Update()
     }
 
     // 5. 플레이어 <-> 트랩 충돌 처리
+    for (size_t i = 0; i < player.size(); ++i) {
+     
+        for (auto jt = traps.begin(); jt != traps.end();) {
+            float dx = jt->GetPositionX() - player[i].GetPositionX();
+            float dy = jt->GetPositionY() - player[i].GetPositionY();
+            float distance = std::sqrt(dx * dx + dy * dy);
+            float radiusSum = jt->GetRadius() + player[i].GetRadius();
 
+            if (distance <= radiusSum && distance > 0.0f) 
+            {
+                if (jt->GetRadius() > player[i].GetRadius()) 
+                {
+                    player[i].SetProtected(true);
+                    ++jt;
+                }
+                else {
+                    player[i].SetProtected(false);
+                    // 작은 트랩: 트랩 폭발, 플레이어 분열
+                    float radius = player[i].GetRadius();
+                    if (radius >= 25.0f) {
+                        float newRadius = radius / 2.0f;
+                        player[i].Setradius(newRadius);
+
+                        Player newPlayer;
+                        newPlayer.Setradius(newRadius);
+                        newPlayer.SetColor(player[i].GetColor());
+                        newPlayer.SetSpeed(player[i].GetSpeed());
+                        newPlayer.OnSplit();
+
+                        float x = player[i].GetPositionX();
+                        float y = player[i].GetPositionY();
+                        float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.1415926535f;
+                        float dx = std::cos(angle);
+                        float dy = std::sin(angle);
+                        float offset = newRadius * 2.0f;
+
+                        player[i].SetPosition(x - dx * offset * 0.5f, y - dy * offset * 0.5f);
+                        newPlayer.SetPosition(x + dx * offset * 0.5f, y + dy * offset * 0.5f);
+
+                        player.push_back(newPlayer);
+                       
+                        
+                    }
+                    jt = traps.erase(jt); // 트랩 제거
+                }
+            }
+            else {
+                ++jt;
+            }
+        }
+    }
     // 6. 플레이어 <-> 음식 충돌 체크
     for (auto it = player.begin(); it != player.end();) {
         for (auto jt = foods.begin(); jt != foods.end();) {
@@ -380,7 +430,13 @@ void PlayScene::Update()
             float dy = jt->GetPositionY() - it->GetPositionY();
             float distance = std::sqrt(dx * dx + dy * dy);
             float radiusSum = jt->GetRadius() + it->GetRadius();
-            if (distance <= radiusSum && distance > 0.0f) {
+            if (distance <= radiusSum && distance > 0.0f) 
+            {
+                if (it->GetProtected()) {
+                    // 보호 상태: 적과의 충돌 무시
+                    ++jt;
+                    continue;
+                }
                 if (it->GetRadius() > jt->GetRadius()) {
                     float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
                     it->Setradius(deltaRadius);
@@ -629,6 +685,14 @@ void PlayScene::Update()
     // 16. 플레이어 업데이트
     for (auto it = player.begin(); it != player.end(); ++it) {
         it->Update();
+		if (it->GetProtected()) {
+			std::cout << "Protected: true" << std::endl;
+		}
+        else
+        {
+			std::cout << "Protected: false" << std::endl;
+        }
+	
     }
 
     // 17. 푸드 업데이트
@@ -648,7 +712,7 @@ void PlayScene::Update()
 
     // 20. 점보 업데이트
     for (auto it = jumbos.begin(); it != jumbos.end(); ++it) {
-        it->Update();
+        it->Update(player);
     }
 
 

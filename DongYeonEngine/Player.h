@@ -13,6 +13,7 @@ public:
     void Setradius(float r);
     void SetSpeed(float s) override { speed = s; }
     void SetColor(COLORREF c) override { color = c; }
+	void SetProtected(bool p) { isProtected = p; }
     void PlusTime(float deltaTime)
     { 
        
@@ -29,6 +30,7 @@ public:
     float GetSplitTime() { return splitTime; }
     bool GetIsSplit() { return isSplit; }
     void OnSplit() { isSplit = true; isBoost = true; timeSinceSplit = 0.0f; splitTime = 0.0f; }
+	bool GetProtected() { return isProtected; }
 
 private:
     float mX;
@@ -42,7 +44,7 @@ private:
     bool isBoost;
     float splitTime = 0.0f;
     float boostTime = 0.5f; // 속도 부스트 지속 시간
-   
+	bool isProtected = false; // 보호 상태
     // 속도 계산용 상수
     static constexpr float BASE_RADIUS = 30.0f; // 기준 반지름
     static constexpr float BASE_SPEED = 80.0f; // 기준 속도

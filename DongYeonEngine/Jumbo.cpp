@@ -6,62 +6,86 @@ using namespace Gdiplus;
 
 #define M_PI 3.14159265358979
 
-
 Jumbo::Jumbo()
 {
     std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
     std::random_device gen;
 
-	mX = 0;
-
-	mY = 0;
-	rect = { (int)(mX - radius), (int)(mY - radius),(int)(mX + radius),(int)(rect.bottom = mY + radius) };
-	color = RGB(255, 0, 255);
-	radius = 30.0f;
-	speed = 150.0f;
-	// 초기 랜덤 각도 설정
-	float angle = distAngle(gen);
-	dirX = cos(angle);
-	dirY = sin(angle);
-
-	rect = { (int)(mX - radius), (int)(mY - radius), (int)(mX + radius), (int)(mY + radius) };
-
+    mX = 0;
+    mY = 0;
+    rect = { (int)(mX - radius), (int)(mY - radius), (int)(mX + radius), (int)(mY + radius) };
+    color = RGB(255, 0, 255);
+    radius = 30.0f;
+    speed = 100.0f; // 기본 속도
+    fastSpeed = 200.0f; // 플레이어 감지 시 빠른 속도
+    // 초기 랜덤 각도 설정
+    float angle = distAngle(gen);
+    dirX = cos(angle);
+    dirY = sin(angle);
+    playerDetectRadius = 300.0f;
+    rect = { (int)(mX - radius), (int)(mY - radius), (int)(mX + radius), (int)(mY + radius) };
 }
 
-void Jumbo::Update()
+void Jumbo::Update(std::vector<Player>& players)
 {
-    std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
-    std::random_device gen;
+    float currentSpeed = speed; // 현재 속도 (기본 속도)
+    bool playerDetected = false;
 
-    float deltaTime = Time::DeltaTime(); // 시간 기반 이동
-    mX += dirX * speed * deltaTime;
-    mY += dirY * speed * deltaTime;
-
-    // 화면 경계 충돌 처리
-    bool collision = false;
-    if (mX - radius < 0 || mX + radius > 1600)
+    // 플레이어 감지 후 플레이어 쪽으로 이동
+    for (size_t i = 0; i < players.size(); ++i)
     {
-        collision = true;
-        mX = max(radius, min(mX, 1600 - radius)); // 경계 밖 벗어남 방지
+        float dx = players[i].GetPositionX() - mX;
+        float dy = players[i].GetPositionY() - mY;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance <= playerDetectRadius)
+        {
+            // 플레이어 감지: 빠른 속도로 플레이어 쪽으로 이동
+            playerDetected = true;
+            currentSpeed = fastSpeed;
+            dirX = dx / distance;
+            dirY = dy / distance;
+
+            float radiusSum = radius + players[i].GetRadius();
+            if (distance <= radiusSum)
+            {
+               
+                
+            }
+        }
     }
 
-    if (mY - radius < 0 || mY + radius > 800)
+    // 플레이어를 감지하지 못한 경우 랜덤 이동
+    if (!playerDetected)
     {
-        collision = true;
-        mY = max(radius, min(mY, 800 - radius)); // 경계 밖 벗어남 방지
+        std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
+        std::random_device gen;
+
+        // 화면 경계 충돌 시 랜덤 방향 설정
+        bool collision = false;
+        if (mX - radius < 0 || mX + radius > 1600)
+        {
+            collision = true;
+            mX = max(radius, min(mX, 1600 - radius)); // 경계 밖 벗어남 방지
+        }
+        if (mY - radius < 0 || mY + radius > 800)
+        {
+            collision = true;
+            mY = max(radius, min(mY, 800 - radius)); // 경계 밖 벗어남 방지
+        }
+        if (collision)
+        {
+            float angle = distAngle(gen);
+            dirX = cos(angle);
+            dirY = sin(angle);
+        }
     }
 
-    // 충돌 시 랜덤 각도로 방향 설정
-    if (collision)
-    {
-        // 0 ~ 2π 사이의 랜덤 각도 생성
+    // 시간 기반 이동
+    float deltaTime = Time::DeltaTime();
+    mX += dirX * currentSpeed * deltaTime;
+    mY += dirY * currentSpeed * deltaTime;
 
-        float angle = distAngle(gen);
-
-        // 방향 벡터 계산
-        dirX = cos(angle);
-        dirY = sin(angle);
-    }
     // 렉트 업데이트
     rect = { (int)(mX - radius), (int)(mY - radius), (int)(mX + radius), (int)(mY + radius) };
 }
@@ -69,20 +93,28 @@ void Jumbo::Update()
 void Jumbo::LateUpdate()
 {
 }
+
 void Jumbo::Render(HDC hdc)
 {
     Graphics graphics(hdc);
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-   
-	Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
-	SolidBrush brush(gdiBrushColor);
-	Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
-	Pen pen(gdiPenColor, 4);
-    //디버깅용
-    //Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+    // 플레이어 감지 범위 원 그리기
+    {
+        // 반투명한 빨간색 원으로 감지 범위 시각화
+        SolidBrush detectBrush(Color(50, 255, 0, 0)); // ARGB: 50% 투명도, 빨간색
+        Pen detectPen(Color(255, 255, 0, 0), 1); // 감지 범위 테두리 (불투명 빨간색)
+        float detectDiameter = playerDetectRadius * 2;
+        graphics.FillEllipse(&detectBrush, mX - playerDetectRadius, mY - playerDetectRadius, detectDiameter, detectDiameter);
+        graphics.DrawEllipse(&detectPen, mX - playerDetectRadius, mY - playerDetectRadius, detectDiameter, detectDiameter);
+    }
 
-    
+    // Jumbo 본체 (삼각형) 그리기
+    Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
+    SolidBrush brush(gdiBrushColor);
+    Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
+    Pen pen(gdiPenColor, 4);
+
     POINT points[3];
     float centerX = mX;
     float centerY = mY;
@@ -90,10 +122,8 @@ void Jumbo::Render(HDC hdc)
 
     points[0].x = static_cast<LONG>(centerX);
     points[0].y = static_cast<LONG>(centerY - r);
-
     points[1].x = static_cast<LONG>(centerX - r * 0.866f);
     points[1].y = static_cast<LONG>(centerY + r * 0.5f);
-
     points[2].x = static_cast<LONG>(centerX + r * 0.866f);
     points[2].y = static_cast<LONG>(centerY + r * 0.5f);
 
@@ -103,41 +133,36 @@ void Jumbo::Render(HDC hdc)
 
 void Jumbo::SetPosition(float x, float y)
 {
-	mX = x;
-	mY = y;
-
+    mX = x;
+    mY = y;
 }
-
-
 
 float Jumbo::GetPositionX()
 {
-	return mX;
+    return mX;
 }
 
 float Jumbo::GetPositionY()
 {
-	return mY;
+    return mY;
 }
 
 float Jumbo::GetSpeed()
 {
-	return speed;
+    return speed;
 }
 
 COLORREF Jumbo::GetColor()
 {
-	return color;
+    return color;
 }
 
 float Jumbo::GetRadius()
 {
-	return radius;
+    return radius;
 }
 
 RECT Jumbo::GetRect()
 {
-	return rect;
+    return rect;
 }
-
-

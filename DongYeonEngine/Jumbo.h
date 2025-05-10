@@ -1,11 +1,13 @@
 #pragma once
 #include "GameObject.h"
 
+#include "Player.h"
+
 class Jumbo : public GameObject
 {
 public:
 	Jumbo();
-	void Update() override;
+	void Update(std::vector<Player>& players);
 	void LateUpdate() override;
 	void Render(HDC hdc) override;
 
@@ -28,7 +30,8 @@ private:
 	float dirY;
 	float radius;
 	float speed;
-
+	float fastSpeed;
+	float playerDetectRadius;
 	RECT rect;
 	COLORREF color;
 
