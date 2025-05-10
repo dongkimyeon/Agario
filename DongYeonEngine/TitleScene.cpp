@@ -1,5 +1,6 @@
 #include "TitleScene.h"
 #include "SceneManager.h"
+#include "Input.h"
 #include <cmath>
 
 extern const UINT width;
@@ -7,9 +8,15 @@ extern const UINT height;
 
 TitleScene::TitleScene()
     : mBackgroundImage(nullptr)
+    , mGameStartImage1(nullptr)
+    , mGameStartImage2(nullptr)
+    , mExitImage1(nullptr)
+    , mExitImage2(nullptr)
+    , GameStartButtonCheck(false)
+    , ExitButtonCheck(false)
+    , startButton({ static_cast<LONG>(width / 2 - 100), static_cast<LONG>(height / 2 + 120), static_cast<LONG>(width / 2 + 133), static_cast<LONG>(height / 2 + 190) })
+    , ExitButton({ static_cast<LONG>(width / 2 - 90), static_cast<LONG>(height / 2 + 220), static_cast<LONG>(width / 2 + 115), static_cast<LONG>(height / 2 + 290) })
     , mGdiplusToken(0)
-    , startButton({ 400, 500, 1200, 650 })
-    , mAlphaTimer(0.0f)
 {
     // GDI+ 초기화
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -20,8 +27,33 @@ TitleScene::~TitleScene()
 {
     if (mBackgroundImage != nullptr)
     {
-        delete mBackgroundImage; // 이미지 객체 해제
+        delete mBackgroundImage;
         mBackgroundImage = nullptr;
+    }
+    if (mGameStartImage1 != nullptr)
+    {
+        delete mGameStartImage1;
+        mGameStartImage1 = nullptr;
+    }
+    if (mGameStartImage2 != nullptr)
+    {
+        delete mGameStartImage2;
+        mGameStartImage2 = nullptr;
+    }
+    if (mExitImage1 != nullptr)
+    {
+        delete mExitImage1;
+        mExitImage1 = nullptr;
+    }
+    if (mExitImage2 != nullptr)
+    {
+        delete mExitImage2;
+        mExitImage2 = nullptr;
+    }
+    if (mLogoImage != nullptr)
+    {
+        delete mExitImage2;
+        mLogoImage = nullptr;
     }
 
     // GDI+ 종료
@@ -35,23 +67,40 @@ TitleScene::~TitleScene()
 void TitleScene::Initialize()
 {
     // 이미지 로드
-    mBackgroundImage = new Gdiplus::Image(L"resources/Agario.png");
+    mBackgroundImage = new Gdiplus::Image(L"resources/EndAgario.png");
+    mLogoImage = new Gdiplus::Image(L"resources/AgarioLogo.png");
+    mGameStartImage1 = new Gdiplus::Image(L"resources/GameStartButton1.png");
+    mGameStartImage2 = new Gdiplus::Image(L"resources/GameStartButton2.png");
+    mExitImage1 = new Gdiplus::Image(L"resources/ExitButton1.png");
+    mExitImage2 = new Gdiplus::Image(L"resources/ExitButton2.png");
 }
 
 void TitleScene::Update()
 {
     Scene::Update();
 
-    // 스페이스 키로 PlayScene 전환
-    if (GetAsyncKeyState(VK_SPACE) & 0x8000)
-    {
-        SceneManager::LoadScene(L"PlayScene");
-    }
+    Vector2 mousePos = Input::GetMousePosition();
 
-    // 알파 타이머 업데이트 (페이드 효과를 위해)
-    mAlphaTimer += 0.3f; // 속도 조절 (값이 클수록 빠르게 깜빡임)
-    if (mAlphaTimer > 2.0f * 3.14159f) // 2π 주기로 반복
-        mAlphaTimer -= 2.0f * 3.14159f;
+    // 마우스가 게임 시작 버튼 위에 있는지 확인
+    GameStartButtonCheck = (mousePos.x >= startButton.left && mousePos.x <= startButton.right &&
+        mousePos.y >= startButton.top && mousePos.y <= startButton.bottom);
+
+    // 마우스가 종료 버튼 위에 있는지 확인
+    ExitButtonCheck = (mousePos.x >= ExitButton.left && mousePos.x <= ExitButton.right &&
+        mousePos.y >= ExitButton.top && mousePos.y <= ExitButton.bottom);
+
+    // 마우스 왼쪽 버튼 클릭 처리
+    if (Input::GetKeyDown(eKeyCode::LButton))
+    {
+        if (GameStartButtonCheck)
+        {
+            SceneManager::LoadScene(L"PlayScene");
+        }
+        else if (ExitButtonCheck)
+        {
+            PostQuitMessage(0); // 게임 종료
+        }
+    }
 }
 
 void TitleScene::LateUpdate()
@@ -64,36 +113,21 @@ void TitleScene::Render(HDC hdc)
     Scene::Render(hdc);
     Gdiplus::Graphics graphics(hdc);
 
-    // 백그라운드 이미지 그리기 (창 크기에 맞게 스트레치)
+	Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
+	Rectangle(hdc, ExitButton.left, ExitButton.top, ExitButton.right, ExitButton.bottom);
+   
     graphics.DrawImage(mBackgroundImage, 0, 0, width, height);
 
-    // 스타트 버튼 사각형 그리기 (디버깅용, 필요 시 주석 해제)
-    // Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
+    graphics.DrawImage(mLogoImage, width / 2 - 330, height / 2 -200 , 237 *3, 114*3);
+    // 게임 시작 버튼 이미지 선택
+    if (GameStartButtonCheck)
+        graphics.DrawImage(mGameStartImage2, width / 2 - 100, height / 2 + 100, 237, 114);
+    else
+        graphics.DrawImage(mGameStartImage1, width / 2 - 100, height / 2 + 100, 237, 114);
 
-    // "PRESS TO SPACE" 텍스트 그리기
-    Gdiplus::Font font(L"Arial", 24, Gdiplus::FontStyleBold);
-    Gdiplus::StringFormat stringFormat;
-    stringFormat.SetAlignment(Gdiplus::StringAlignmentCenter); // 가로 중앙 정렬
-    stringFormat.SetLineAlignment(Gdiplus::StringAlignmentCenter); // 세로 중앙 정렬
-
-    // 투명도 계산 (0~255, 사인파로 부드럽게 변화)
-    int alpha = static_cast<int>((std::sin(mAlphaTimer) + 1.0f) * 0.5f * 255);
-    Gdiplus::SolidBrush brush(Gdiplus::Color(alpha, 0, 0, 0)); // 검정색, 알파 값 적용
-
-    // 스타트 버튼 영역에 맞춰 텍스트 그리기
-    Gdiplus::RectF textRect(
-        static_cast<float>(startButton.left),
-        static_cast<float>(startButton.top),
-        static_cast<float>(startButton.right - startButton.left),
-        static_cast<float>(startButton.bottom - startButton.top)
-    );
-
-    graphics.DrawString(
-        L"PRESS TO SPACE",
-        -1,
-        &font,
-        textRect,
-        &stringFormat,
-        &brush
-    );
+    // 종료 버튼 이미지 선택
+    if (ExitButtonCheck)
+        graphics.DrawImage(mExitImage2, width / 2 - 100, height / 2 + 200, 237, 114);
+    else
+        graphics.DrawImage(mExitImage1, width / 2 - 100, height / 2 + 200, 237, 114);
 }

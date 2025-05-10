@@ -10,8 +10,10 @@
 
 extern int endMin = 0;
 extern int endSec = 0;
-extern int maxSize = 0;
+extern float maxSize = 0;
 extern int endEatCnt = 0;
+
+
 
 std::mt19937 gen(std::random_device{}()); // 시드 초기화
 std::uniform_int_distribution<int> widthUid(20, 1580); // 1600 - 20
@@ -84,10 +86,12 @@ void SetNonOverlappingPosition(float& x, float& y, float radius, std::vector<Foo
 PlayScene::PlayScene()
 {
     Reset(); // 생성자에서 Reset 호출
+    
 }
 
 PlayScene::~PlayScene()
 {
+    Reset();
 }
 
 void PlayScene::Initialize()
@@ -115,10 +119,6 @@ void PlayScene::Reset()
     eatCnt = 0;
 
     // 전역 변수 초기화
-    endMin = 0;
-    endSec = 0;
-    maxSize = 0;
-    endEatCnt = 0;
     allowEnemySplit = false;
     // 음식 객체 초기화
     while (foods.size() < FOOD_SIZE)
@@ -168,12 +168,17 @@ void PlayScene::Reset()
     SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
     obj.SetPosition(x, y);
     player.push_back(obj);
+   
+    
 }
 
 void PlayScene::Update()
 {
     Scene::Update();
 
+    if (player[0].GetRadius() > maxSize) {
+        maxSize = static_cast<int>(player[0].GetRadius());
+    }
     // 1. 입력 처리
     if (Input::GetKeyDown(eKeyCode::S)) {
         stopFlag = true;
@@ -196,14 +201,18 @@ void PlayScene::Update()
     if (Input::GetKeyDown(eKeyCode::P)) {
         printFlag = !printFlag;
     }
-    if (Input::GetKeyDown(eKeyCode::Q)) {
-        SceneManager::LoadScene(L"EndScene");
+    if (Input::GetKeyDown(eKeyCode::Q))
+    {
         int minutes = static_cast<int>(PlayTime) / 60;
         int seconds = static_cast<int>(PlayTime) % 60;
+
         endSec = seconds;
         endMin = minutes;
         endEatCnt = eatCnt;
+        
+        SceneManager::LoadScene(L"EndScene");
         Reset();
+
         return;
     }
     if (Input::GetKeyDown(eKeyCode::S)) {
@@ -310,6 +319,10 @@ void PlayScene::Update()
                 if (distance <= radiusSum) {
                     float deltaRadius = basePlayer->GetRadius() + it->GetRadius();
                     basePlayer->Setradius(deltaRadius);
+                    if (it->GetRadius() > maxSize) {
+                        maxSize = static_cast<int>(it->GetRadius());
+                    }
+
                     it = player.erase(it);
                 }
                 else {
@@ -323,7 +336,7 @@ void PlayScene::Update()
     }
 
     // 5. 플레이어 <-> 트랩 충돌 처리
-    
+
     // 6. 플레이어 <-> 음식 충돌 체크
     for (auto it = player.begin(); it != player.end();) {
         for (auto jt = foods.begin(); jt != foods.end();) {
@@ -332,11 +345,15 @@ void PlayScene::Update()
             float distance = std::sqrt(dx * dx + dy * dy);
 
             float radiusSum = jt->GetRadius() + it->GetRadius();
-            if (distance <= radiusSum) {
+            if (distance <= radiusSum) 
+            {
                 float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
                 it->Setradius(deltaRadius);
                 eatCnt++;
                 jt = foods.erase(jt);
+                if (it->GetRadius() > maxSize) {
+                    maxSize = static_cast<int>(it->GetRadius());
+                }
             }
             else {
                 ++jt;
@@ -358,19 +375,29 @@ void PlayScene::Update()
                     float deltaRadius = it->GetRadius() + (jt->GetRadius() / 4);
                     it->Setradius(deltaRadius);
                     jt = enemys.erase(jt);
+                    if (it->GetRadius() > maxSize) {
+                        maxSize = static_cast<int>(it->GetRadius());
+                    }
+
                 }
                 else if (jt->GetRadius() > it->GetRadius()) {
                     float deltaRadius = jt->GetRadius() + (it->GetRadius() / 4);
                     jt->Setradius(deltaRadius);
                     it = player.erase(it);
                     playerErased = true;
-                    if (player.empty()) {
-                        SceneManager::LoadScene(L"EndScene");
+                    if (player.empty())
+                    {
                         int minutes = static_cast<int>(PlayTime) / 60;
                         int seconds = static_cast<int>(PlayTime) % 60;
+
                         endSec = seconds;
                         endMin = minutes;
                         endEatCnt = eatCnt;
+                      
+                        SceneManager::LoadScene(L"EndScene");
+                        Reset();
+
+                        return;
                     }
                     break;
                 }
@@ -605,12 +632,7 @@ void PlayScene::Update()
         it->Update();
     }
 
-    // 21. 최대 크기 갱신
-    for (auto it = player.begin(); it != player.end(); ++it) {
-        if (maxSize < it->GetRadius()) {
-            maxSize = it->GetRadius();
-        }
-    }
+
 }
 
 void PlayScene::LateUpdate()
@@ -668,7 +690,7 @@ void PlayScene::Render(HDC hdc)
         return;
     }
 
-    Gdiplus::SolidBrush brush(Gdiplus::Color(255, 255, 255, 255)); // 빨간색 텍스트로 가시성 테스트
+    Gdiplus::SolidBrush brush(Gdiplus::Color(255, 255, 255, 255)); 
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentNear); // 왼쪽 정렬
 
@@ -679,18 +701,28 @@ void PlayScene::Render(HDC hdc)
     // 플레이 시간, 최대 반지름, 먹은 음식 개수 계산
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
+
     float max = 0;
+    
     for (auto it = player.begin(); it != player.end(); ++it)
     {
         if (it->GetRadius() > max)
             max = it->GetRadius();
     }
 
+ 
     // 텍스트 문자열 생성
-    std::wstring timeText = L"Play Time: " + std::to_wstring(minutes) + L"분 " + std::to_wstring(seconds) + L"초";
-    std::wstring radiusText = L"Player Radius: " + std::to_wstring((int)max);
-    std::wstring eatCntText = L"Player Food Cnt: " + std::to_wstring(eatCnt);
+    wchar_t timeBuffer[50];
+    swprintf(timeBuffer, 50, L"Play Time: %d분 %d초", minutes, seconds);
+    std::wstring timeText = timeBuffer;
 
+    wchar_t radiusBuffer[50];
+    swprintf(radiusBuffer, 50, L"Player Radius: %.1f", max); // 소수점 한 자리 출력
+    std::wstring radiusText = radiusBuffer;
+
+    wchar_t eatCntBuffer[50];
+    swprintf(eatCntBuffer, 50, L"Player Food Cnt: %d", eatCnt);
+    std::wstring eatCntText = eatCntBuffer;
     // 텍스트 렌더링
 
     if (printFlag)
@@ -704,10 +736,10 @@ void PlayScene::Render(HDC hdc)
     }
     
     Gdiplus::SolidBrush brush2(Gdiplus::Color(255, 0,0 , 0)); //마우스 검은색
-    // 마우스 좌표 출력
-    std::wstring mouseText = L"X: " + std::to_wstring((int)Input::GetMousePosition().x) +
-                             L" Y: " + std::to_wstring((int)Input::GetMousePosition().y);
-    graphics.DrawString(mouseText.c_str(), -1, &font, 
-                       Gdiplus::PointF(Input::GetMousePosition().x + 10.0f, Input::GetMousePosition().y), 
-                       &format, &brush2);
+    //// 마우스 좌표 출력
+    //std::wstring mouseText = L"X: " + std::to_wstring((int)Input::GetMousePosition().x) +
+    //                         L" Y: " + std::to_wstring((int)Input::GetMousePosition().y);
+    //graphics.DrawString(mouseText.c_str(), -1, &font, 
+    //                   Gdiplus::PointF(Input::GetMousePosition().x + 10.0f, Input::GetMousePosition().y), 
+    //                   &format, &brush2);
 }

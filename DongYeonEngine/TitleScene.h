@@ -14,7 +14,14 @@ public:
 
 private:
     Gdiplus::Image* mBackgroundImage;
-    float mAlphaTimer;
+    Gdiplus::Image* mLogoImage;
+    Gdiplus::Image* mGameStartImage1;
+    Gdiplus::Image* mGameStartImage2;
+    Gdiplus::Image* mExitImage1;
+    Gdiplus::Image* mExitImage2;
+    bool GameStartButtonCheck; 
+    bool ExitButtonCheck;
+    RECT ExitButton;
 	RECT startButton; 
     ULONG_PTR mGdiplusToken;         // GDI+ ÅäÅ«
 

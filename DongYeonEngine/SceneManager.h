@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 
+
 class SceneManager
 {
 public:
@@ -27,7 +28,7 @@ public:
 
 		return iter->second;
 	}
-
+	
 	static void Initialize();
 	static void Update();
 	static void LateUpdate();
@@ -37,4 +38,7 @@ private:
 	//static std::vector<Scene*> mScene;
 	static std::map<std::wstring, Scene*> mScene;
 	static Scene* mActiveScene;
+	
+	
+
 };

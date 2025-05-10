@@ -14,7 +14,7 @@ public:
 
 private:
     Gdiplus::Image* mBackgroundImage;
-   
+    Gdiplus::Image* mGameOverimage;
     RECT startButton;
     ULONG_PTR mGdiplusToken;         // GDI+ ÅäÅ«
 
