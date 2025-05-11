@@ -102,7 +102,7 @@ void PlayScene::Initialize()
     mWarnningImage3 = new Gdiplus::Image(L"resources/warnning3.png");
     mWarnningImage4 = new Gdiplus::Image(L"resources/warnning4.png");
     mWarnningImage5 = new Gdiplus::Image(L"resources/warnning5.png");
-
+    mZoomtogleImage = new Gdiplus::Image(L"resources/zoomtogleKey.png");
     if (mWarnningImage->GetLastStatus() != Gdiplus::Ok) {
         std::cout << "Failed to load warnning.png" << std::endl;
         delete mWarnningImage;
@@ -161,15 +161,15 @@ void PlayScene::Reset()
         traps.push_back(obj);
     }
 
-    //// 점보 객체 초기화
-    //while (jumbos.size() < JUMBO_SIZE)
-    //{
-    //    Jumbo obj;
-    //    float x, y;
-    //    SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
-    //    obj.SetPosition(x, y);
-    //    jumbos.push_back(obj);
-    //}
+    // 점보 객체 초기화
+    while (jumbos.size() < JUMBO_SIZE)
+    {
+        Jumbo obj;
+        float x, y;
+        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+        obj.SetPosition(x, y);
+        jumbos.push_back(obj);
+    }
 
     // 플레이어 객체 초기화
     Player obj;
@@ -186,12 +186,35 @@ void PlayScene::Reset()
     }
     mZoomScale = 1.0f; // 기본 2배 확대
 
+    mCamType = true;
+   
+
 }
 
 void PlayScene::Update()
 {
-    Scene::Update();
-
+   
+    if (mCamType)
+    {
+        mZoomScale = 1.0f;
+    }
+    else
+    {
+        
+        if (Input::GetKeyDown(eKeyCode::WheelUp)) {
+            mZoomScale += 0.05f; 
+            if (mZoomScale > 3.0f) mZoomScale = 3.0f; 
+            std::cout << "Zoom In: mZoomScale = " << mZoomScale << std::endl;
+        }
+        if (Input::GetKeyDown(eKeyCode::WheelDown)) {
+            mZoomScale -= 0.05f; // 줌 아웃
+            if (mZoomScale < 1.0f) mZoomScale = 1.0f; 
+            std::cout << "Zoom Out: mZoomScale = " << mZoomScale << std::endl;
+        }
+    }
+    
+    
+    
     if (player[0].GetRadius() > maxSize) {
         maxSize = static_cast<int>(player[0].GetRadius());
     }
@@ -200,7 +223,9 @@ void PlayScene::Update()
         stopFlag = true;
         stopTimer = 0.0f;
     }
-
+    if (Input::GetKeyDown(eKeyCode::Z)) {
+        mCamType = !mCamType;
+    }
     if (stopFlag) {
         stopTimer += Time::DeltaTime();
         if (stopTimer >= 2.0f) {
@@ -210,7 +235,7 @@ void PlayScene::Update()
         return;
     }
 
-    if (Input::GetKeyDown(eKeyCode::R)) {
+    if (Input::GetKeyDown(eKeyCode::R) ) {
         Reset();
         return;
     }
@@ -259,8 +284,7 @@ void PlayScene::Update()
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
 
-    // 먹이 뱉기
-    if (Input::GetKeyDown(eKeyCode::RButton) && !player.empty())
+    if (Input::GetKeyDown(eKeyCode::RButton) && !player.empty()  &&!player[0].GetJumbo())
     {
         std::cout << "먹이 뱉기" << std::endl;
         for (auto& p : player)
@@ -269,7 +293,6 @@ void PlayScene::Update()
             if (radius < 15.0f) // 최소 크기 제한
                 continue;
 
-           
             POINT mousePos = { (INT)Input::GetMousePosition().x, (INT)Input::GetMousePosition().y };
             float clientWidth = 1600.0f;
             float clientHeight = 800.0f;
@@ -289,11 +312,13 @@ void PlayScene::Update()
             // 방향 단위 벡터
             dx /= distance;
             dy /= distance;
-            //ㅁㄴㅇ
+
             // 새로운 먹이 생성
             Food newFood;
             float foodRadius = 5.0f; // 뱉는 먹이의 크기
             newFood.Setradius(foodRadius);
+            newFood.SetPlayerCreate(true); // 뱉어진 먹이로 표시
+            newFood.SetMoveTime(1.0f); // 1초 동안 이동
 
             // 먹이 위치 설정 (플레이어 바깥쪽에서 시작)
             float offset = p.GetRadius() + foodRadius + 3.0f;
@@ -315,7 +340,6 @@ void PlayScene::Update()
             std::cout << "먹이 뱉기: 방향 (" << dx << ", " << dy << "), 위치 (" << x + dx * offset << ", " << y + dy * offset << ")" << std::endl;
         }
     }
-
     // 플레이어 분열
     if (Input::GetKeyDown(eKeyCode::LButton) && !player.empty()) {
         POINT mousePos = { (INT)Input::GetMousePosition().x, (INT)Input::GetMousePosition().y };
@@ -902,6 +926,10 @@ void PlayScene::LateUpdate()
 void PlayScene::Render(HDC hdc)
 {
     Gdiplus::Graphics graphics(hdc);
+    Gdiplus::SolidBrush backGroundBrush(Gdiplus::Color(226, 226, 226, 226));
+    Gdiplus::Rect backGroundRect(0, 0, 1600, 800);
+    graphics.FillRectangle(&backGroundBrush, backGroundRect);
+
     if (graphics.GetLastStatus() != Gdiplus::Ok) {
         std::cout << "Failed to create GDI+ Graphics object" << std::endl;
         return;
@@ -920,7 +948,7 @@ void PlayScene::Render(HDC hdc)
     graphics.SetTransform(&transform);
 
     // 격자 배경 그리기
-    Gdiplus::Pen gridPen(Gdiplus::Color(255, 100, 100, 100), 1.0f);
+    Gdiplus::Pen gridPen(Gdiplus::Color(255, 122, 122, 122), 1.0f);
     const float gridSize = 50.0f;
     const float worldWidth = 1600.0f;
     const float worldHeight = 800.0f;
@@ -980,6 +1008,21 @@ void PlayScene::Render(HDC hdc)
         return;
     }
 
+    graphics.ResetTransform();
+    if (mZoomtogleImage) {
+        Gdiplus::RectF rect(1550.0f, 0, 50.0f, 50.0f); // 우측 상단
+        graphics.DrawImage(mZoomtogleImage, rect);
+    }
+
+   
+    Gdiplus::Font infoText(L"Arial", 15, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+    Gdiplus::SolidBrush infoBrush(Gdiplus::Color(255, 0, 0, 0));
+    Gdiplus::StringFormat infoFormat;
+    infoFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
+    std::wstring toggleText = mCamType ? L"고정 탑 뷰" : L"줌 인/아웃 가능";
+    graphics.DrawString(toggleText.c_str(), -1, &infoText, Gdiplus::PointF(1480.0f, 15.0f), &infoFormat, &infoBrush);
+
+
     Gdiplus::SolidBrush brush(Gdiplus::Color(255, 255, 255, 255));
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentNear);
@@ -1006,6 +1049,7 @@ void PlayScene::Render(HDC hdc)
     swprintf(eatCntBuffer, 50, L"Player Food Cnt: %d", eatCnt);
     std::wstring eatCntText = eatCntBuffer;
 
+    Time::Render(hdc);
     if (printFlag) {
         graphics.FillRectangle(&bgBrush, 5, 5, 300, 100);
         graphics.DrawString(timeText.c_str(), -1, &font, Gdiplus::PointF(10.0f, 10.0f), &format, &brush);

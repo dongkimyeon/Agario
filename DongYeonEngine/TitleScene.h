@@ -7,9 +7,9 @@ public:
     TitleScene();
     ~TitleScene();
 
-    void Initialize() override;
+    void Initialize()override;
     void Update() override;
-    void LateUpdate() override;
+    void LateUpdate()override;
     void Render(HDC hdc) override;
 
 private:
@@ -23,7 +23,7 @@ private:
     bool ExitButtonCheck;
     RECT ExitButton;
 	RECT startButton; 
-
+    
     ULONG_PTR mGdiplusToken;         // GDI+ ÅäÅ«
 
 };

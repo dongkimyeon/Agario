@@ -113,12 +113,12 @@ void TitleScene::Render(HDC hdc)
     Scene::Render(hdc);
     Gdiplus::Graphics graphics(hdc);
 
-	//Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
-	//Rectangle(hdc, ExitButton.left, ExitButton.top, ExitButton.right, ExitButton.bottom);
+    //Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
+    //Rectangle(hdc, ExitButton.left, ExitButton.top, ExitButton.right, ExitButton.bottom);
  //  
     graphics.DrawImage(mBackgroundImage, 0, 0, width, height);
 
-    graphics.DrawImage(mLogoImage, width / 2 - 330, height / 2 -200 , 237 *3, 114*3);
+    graphics.DrawImage(mLogoImage, width / 2 - 330, height / 2 - 200, 237 * 3, 114 * 3);
     // 게임 시작 버튼 이미지 선택
     if (GameStartButtonCheck)
         graphics.DrawImage(mGameStartImage2, width / 2 - 100, height / 2 + 100, 237, 114);

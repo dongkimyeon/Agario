@@ -12,6 +12,10 @@ public:
 	void SetPosition(float x, float y) override;
 	void SetDirection(float dx, float dy) { dirX = dx; dirY = dy; }
 	void SetSpeed(float s)  { speed = s; }
+	void SetPlayerCreate(bool b) { playerCreateFoodCheck = b; }
+	void SetMoveTime(float t) { moveTime = t; }
+	float GetMoveTime() { return moveTime; }
+	bool GetPlayerCreateState() { return playerCreateFoodCheck; }
 	float GetPositionX() override;
 	float GetPositionY() override;
 	float GetSpeed() override;
@@ -26,6 +30,8 @@ private:
 	float dirY = 0.0f; 
 	float speed;
 	RECT rect;
+	bool playerCreateFoodCheck;
+	float moveTime;
 	COLORREF color;
 
 };

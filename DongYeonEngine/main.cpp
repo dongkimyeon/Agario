@@ -2,9 +2,10 @@
 #include "Editor_Window.h"
 #include "Game.h"
 #include "LoadScenes.h"
+#include "Input.h"
 #define MAX_LOADSTRING 100
 
-#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
+//#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
 
 Game GAME;
 // 전역 변수:
@@ -107,6 +108,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_MOUSEWHEEL:
+    {
+        Input::UpdateMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam)); // 마우스 휠 처리
+        break;
+    }
     case WM_PAINT:
     {
         PAINTSTRUCT ps;

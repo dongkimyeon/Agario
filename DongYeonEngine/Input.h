@@ -18,7 +18,8 @@ enum class eKeyCode
 	Z, X, C, V, B, N, M,
 	Left, Right, Down, Up,
 	LButton, MButton, RButton, SPACE,
-	End, 
+	WheelUp, WheelDown,
+	End,
 };
 
 class Input
@@ -39,6 +40,9 @@ public:
 	static bool GetKey(eKeyCode code) { return Keys[(UINT)code].state == eKeyState::Pressed; }
 	static Vector2 GetMousePosition() { return mMousePosition; }
 
+
+	static void UpdateMouseWheel(int delta);
+
 private:
 	static void createKeys();
 	static void updateKeys();
@@ -49,8 +53,8 @@ private:
 	static void getMousePositionByWindow();
 	static void clearKeys();
 
-
 private:
 	static std::vector<Key> Keys;
 	static Vector2 mMousePosition;
+	static int mWheelDelta; 
 };

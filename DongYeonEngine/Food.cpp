@@ -14,30 +14,34 @@ Food::Food()
 	speed = 0.0f;
 	dirX = 0.0f;
 	dirY = 0.0f;
-
+	playerCreateFoodCheck = false;
+	moveTime = 0.0f;
 }
 
 void Food::Update()
 {
+	// 뱉어진 먹이이고 moveTime이 남아 있는 경우
+	if (playerCreateFoodCheck && moveTime > 0.0f)
+	{
+		moveTime -= Time::DeltaTime(); // 이동 시간 감소
+		if (moveTime <= 0.0f)
+		{
+			speed = 0.0f; // 시간이 다 되면 이동 멈춤
+		}
+	}
+
 	// 방향과 속도가 설정되어 있으면 이동
 	if (speed > 0.0f)
 	{
 		mX += dirX * speed * Time::DeltaTime();
 		mY += dirY * speed * Time::DeltaTime();
+	}
 
-		// 충돌 영역 업데이트
-		rect.left = (int)(mX - radius);
-		rect.right = (int)(mX + radius);
-		rect.top = (int)(mY - radius);
-		rect.bottom = (int)(mY + radius);
-	}
-	else
-	{
-		rect.left = (int)(mX - radius);
-		rect.right = (int)(mX + radius);
-		rect.top = (int)(mY - radius);
-		rect.bottom = (int)(mY + radius);
-	}
+	// 충돌 영역 업데이트
+	rect.left = (int)(mX - radius);
+	rect.right = (int)(mX + radius);
+	rect.top = (int)(mY - radius);
+	rect.bottom = (int)(mY + radius);
 }
 
 void Food::LateUpdate()

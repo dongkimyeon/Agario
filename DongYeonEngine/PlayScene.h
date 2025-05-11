@@ -8,7 +8,6 @@
 #include "Camera.h"
 #include "SceneManager.h"
 
-
 class PlayScene : public Scene
 {
 public:
@@ -35,13 +34,14 @@ private:
 	Gdiplus::Image* mWarnningImage3;
 	Gdiplus::Image* mWarnningImage4;
 	Gdiplus::Image* mWarnningImage5;
-
+    Gdiplus::Image* mZoomtogleImage;
     bool showExclamation = false; // 느낌표 표시 여부
     float exclamationX = 0.0f; // 느낌표 X 좌표
     float exclamationY = 0.0f; // 느낌표 Y 좌표
    
     //카메라 부분 
     float mZoomScale; 
+    bool mCamType;
     HDC mMemDC;       // 메모리 DC 
     HBITMAP mMemBitmap; // 메모리 DC용 비트맵
     float mCameraX = 0.0f; // 현재 카메라 X 위치
