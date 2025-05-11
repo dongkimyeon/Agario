@@ -18,6 +18,7 @@ int ASCII[(UINT)eKeyCode::End] =
 void Input::Initialize()
 {
 	createKeys();
+	
 }
 
 void Input::Update()

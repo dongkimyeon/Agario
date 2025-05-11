@@ -5,7 +5,7 @@ class Player : public GameObject
 {
 public:
     Player();
-    void Update() override;
+    void Update(float zoomScale, float cameraX, float cameraY, float clientWidth, float clientHeight); 
     void LateUpdate() override;
     void Render(Gdiplus::Graphics& graphics) override;
 

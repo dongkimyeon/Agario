@@ -20,18 +20,18 @@ Player::Player()
     isJumbo = false;
 }
 
-void Player::Update()
+void Player::Update(float zoomScale, float cameraX, float cameraY, float clientWidth, float clientHeight)
 {
     // 점보 상태 지속 시간 관리
     if (isJumbo)
     {
         jumboTime += Time::DeltaTime();
-        if (jumboTime >= 5.0f) // 5초 후 점보 상태 해제
+        if (jumboTime >= 5.0f)
         {
             isJumbo = false;
             jumboTime = 0.0f;
-            spawnJumbo = true; // 점보 생성 플래그 설정
-            Setradius(radius); // 반지름 초기화
+            spawnJumbo = true;
+            Setradius(radius);
         }
     }
     // 분열 중 속도 부스트
@@ -43,22 +43,29 @@ void Player::Update()
             isBoost = false;
             timeSinceSplit = 0.0f;
             isSplit = false;
-            Setradius(radius); // 반지름 기반으로 속도 재설정
+            Setradius(radius);
         }
         else
         {
-            // 부스트 속도: 기본 속도의 2배, 최대 속도 제한
             float boostedSpeed = (std::min)(speed * 2.0f, MAX_SPEED);
             speed = boostedSpeed;
         }
     }
 
-    int mouseX = (int)Input::GetMousePosition().x;
-    int mouseY = (int)Input::GetMousePosition().y;
+    // 마우스 좌표 얻기 (스크린 좌표)
+    POINT mouse;
+    GetCursorPos(&mouse);
+    ScreenToClient(GetActiveWindow(), &mouse); // 스크린 좌표를 클라이언트 좌표로 변환
+    float mouseX = static_cast<float>(mouse.x);
+    float mouseY = static_cast<float>(mouse.y);
+
+    // 마우스 좌표를 월드 좌표로 변환
+    float worldX = cameraX + (mouseX - clientWidth / 2.0f) / zoomScale;
+    float worldY = cameraY + (mouseY - clientHeight / 2.0f) / zoomScale;
 
     // 플레이어 중심에서 마우스까지 방향 벡터
-    float dx = mouseX - mX;
-    float dy = mouseY - mY;
+    float dx = worldX - mX;
+    float dy = worldY - mY;
     float distance = std::sqrt(dx * dx + dy * dy);
 
     // 거리가 1보다 크면 이동
@@ -69,13 +76,14 @@ void Player::Update()
         mX += dx * speed * Time::DeltaTime();
         mY += dy * speed * Time::DeltaTime();
     }
-    // 클라이언트 영역(1600x800) 경계 제한
-    const int CLIENT_WIDTH = 1600;
-    const int CLIENT_HEIGHT = 800;
 
-    // 플레이어 중심(mX, mY)이 경계를 벗어나지 않도록 제한
-    mX = (std::max)(radius, (std::min)((float)CLIENT_WIDTH - radius, mX));
-    mY = (std::max)(radius, (std::min)((float)CLIENT_HEIGHT - radius, mY));
+    // 클라이언트 영역(1600x800) 경계 제한
+    const float WORLD_WIDTH = 1600.0f;
+    const float WORLD_HEIGHT = 800.0f;
+
+    // 플레이어 중심(mX, mY)이 월드 경계를 벗어나지 않도록 제한
+    mX = (std::max)(radius, (std::min)(WORLD_WIDTH - radius, mX));
+    mY = (std::max)(radius, (std::min)(WORLD_HEIGHT - radius, mY));
 
     // 충돌 영역 업데이트
     rect.left = (int)(mX - radius);

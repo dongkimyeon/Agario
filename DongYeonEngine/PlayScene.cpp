@@ -759,7 +759,7 @@ void PlayScene::Update()
 
     // 16. 플레이어 업데이트
     for (auto it = player.begin(); it != player.end(); ++it) {
-        it->Update();
+        it->Update(mZoomScale, mCameraX, mCameraY, 1600, 800);
 		if (it->GetProtected()) {
 			std::cout << "Protected: true" << std::endl;
 		}
