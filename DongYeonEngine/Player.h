@@ -21,6 +21,10 @@ public:
       
     }
 
+	void SetJumbo(bool j) { isJumbo = j; }  
+    
+	float GetFoodDetectDistance() { return foodDetectDistance; } // 음식 탐지 거리 반환
+	bool GetJumbo() { return isJumbo; } // 점보 상태 확인
     float GetPositionX() override { return mX; }
     float GetPositionY() override { return mY; }
     float GetSpeed() override { return speed; }
@@ -31,6 +35,8 @@ public:
     bool GetIsSplit() { return isSplit; }
     void OnSplit() { isSplit = true; isBoost = true; timeSinceSplit = 0.0f; splitTime = 0.0f; }
 	bool GetProtected() { return isProtected; }
+    bool ShouldSpawnJumbo() const { return spawnJumbo; } // 새 점보 생성 여부
+    void ResetSpawnJumbo() { spawnJumbo = false; } // 생성 플래그 리셋
 
 private:
     float mX;
@@ -45,6 +51,10 @@ private:
     float splitTime = 0.0f;
     float boostTime = 0.5f; // 속도 부스트 지속 시간
 	bool isProtected = false; // 보호 상태
+    bool isJumbo = false;
+	float foodDetectDistance = 250.0f; // 음식 탐지 거리
+    float jumboTime = 0.0f; // 점보 상태 지속 시간
+    bool spawnJumbo = false; // 점보 생성 플래그
     // 속도 계산용 상수
     static constexpr float BASE_RADIUS = 30.0f; // 기준 반지름
     static constexpr float BASE_SPEED = 80.0f; // 기준 속도

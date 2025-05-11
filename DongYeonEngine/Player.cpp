@@ -17,10 +17,23 @@ Player::Player()
     boostTime = 0.5f;
     splitTime = 0.0f;
     isBoost;
+    isJumbo = false;
 }
 
 void Player::Update()
 {
+    // 점보 상태 지속 시간 관리
+    if (isJumbo)
+    {
+        jumboTime += Time::DeltaTime();
+        if (jumboTime >= 5.0f) // 5초 후 점보 상태 해제
+        {
+            isJumbo = false;
+            jumboTime = 0.0f;
+            spawnJumbo = true; // 점보 생성 플래그 설정
+            Setradius(radius); // 반지름 초기화
+        }
+    }
     // 분열 중 속도 부스트
     if (isSplit && isBoost)
     {
@@ -78,17 +91,47 @@ void Player::LateUpdate()
 void Player::Render(HDC hdc)
 {
     Graphics graphics(hdc);
-    graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-    graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
-    Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
-    SolidBrush brush(gdiBrushColor);
-    Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
-    Pen pen(gdiPenColor, 4);
 
-    INT ellipseWidth = rect.right - rect.left;
-    INT ellipseHeight = rect.bottom - rect.top;
-    graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
-    graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
+    graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+
+    if (!isJumbo)
+    {
+     
+        Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
+        SolidBrush brush(gdiBrushColor);
+        Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
+        Pen pen(gdiPenColor, 4);
+
+        INT ellipseWidth = rect.right - rect.left;
+        INT ellipseHeight = rect.bottom - rect.top;
+        graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
+        graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
+    }
+    else
+    {
+
+        // Jumbo 본체 (삼각형) 그리기
+        Color gdiBrushColor(255, 0, 255);
+        SolidBrush brush(gdiBrushColor);
+        Color gdiPenColor(255 * 0.6, GetGValue(color) * 0.6, 255 * 0.6);
+        Pen pen(gdiPenColor, 4);
+
+        POINT points[3];
+        float centerX = mX;
+        float centerY = mY;
+        float r = radius;
+
+        points[0].x = static_cast<LONG>(centerX);
+        points[0].y = static_cast<LONG>(centerY - r);
+        points[1].x = static_cast<LONG>(centerX - r * 0.866f);
+        points[1].y = static_cast<LONG>(centerY + r * 0.5f);
+        points[2].x = static_cast<LONG>(centerX + r * 0.866f);
+        points[2].y = static_cast<LONG>(centerY + r * 0.5f);
+
+        graphics.FillPolygon(&brush, (Gdiplus::Point*)points, 3);
+        graphics.DrawPolygon(&pen, (Gdiplus::Point*)points, 3);
+    }
+ 
 }
 
 void Player::Setradius(float r)

@@ -19,7 +19,7 @@ std::mt19937 gen(std::random_device{}()); // 시드 초기화
 std::uniform_int_distribution<int> widthUid(20, 1580); // 1600 - 20
 std::uniform_int_distribution<int> heightUid(20, 780); // 800 - 20
 
-// 겹침 확인 함수 (기존 코드 유지)
+// 겹침 확인 함수 
 bool IsOverlapping(float x, float y, float radius, std::vector<Food>& foods,
     std::vector<Enemy>& enemies, std::vector<Trap>& traps,
     std::vector<Jumbo>& jumbos, std::vector<Player>& players)
@@ -68,7 +68,7 @@ bool IsOverlapping(float x, float y, float radius, std::vector<Food>& foods,
     return false;
 }
 
-// 새로운 위치 생성 함수 (기존 코드 유지)
+// 새로운 위치 생성 함수
 void SetNonOverlappingPosition(float& x, float& y, float radius, std::vector<Food>& foods,
     std::vector<Enemy>& enemies, std::vector<Trap>& traps,
     std::vector<Jumbo>& jumbos, std::vector<Player>& players)
@@ -115,7 +115,6 @@ void PlayScene::Reset()
     foods.clear();
     enemys.clear();
     traps.clear();
-    jumbos.clear();
     player.clear();
 
     // 타이머 및 카운터 초기화
@@ -657,6 +656,72 @@ void PlayScene::Update()
         }
     }
 
+    // 1. 플레이어 <-> 점보 충돌 처리
+    if (!player.empty())
+    {
+        for (int i = 0; i < player.size(); ++i)
+        {
+            // 점보 상태 해제 시 점보 생성
+            if (player[i].ShouldSpawnJumbo())
+            {
+                Jumbo newJumbo;
+                newJumbo.SetPosition(player[i].GetPositionX(), player[i].GetPositionY());
+                jumbos.push_back(newJumbo);
+                player[i].ResetSpawnJumbo(); // 생성 플래그 리셋
+            }
+
+            // 점보 충돌 처리
+            for (auto it = jumbos.begin(); it != jumbos.end();)
+            {
+                if (it->IsInvincible()) // 무적 상태면 충돌 무시
+                {
+                    ++it;
+                    continue;
+                }
+
+                float dx = it->GetPositionX() - player[i].GetPositionX();
+                float dy = it->GetPositionY() - player[i].GetPositionY();
+                float distance = std::sqrt(dx * dx + dy * dy);
+                float radiusSum = it->GetRadius() + player[i].GetRadius();
+
+                if (distance < radiusSum && distance > 0.0f)
+                {
+                    player[i].SetJumbo(true);
+                    it = jumbos.erase(it); // 점보 제거
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+
+            // 2. 점보 상태 플레이어가 음식 끌어당기기
+            if (player[i].GetJumbo())
+            {
+                const float attractionRange = 200.0f;
+                const float attractionSpeed = 100.0f;
+
+                for (auto& food : foods)
+                {
+                    float dx = player[i].GetPositionX() - food.GetPositionX();
+                    float dy = player[i].GetPositionY() - food.GetPositionY();
+                    float distance = std::sqrt(dx * dx + dy * dy);
+
+                    if (distance < attractionRange && distance > 0.0f)
+                    {
+                        dx /= distance;
+                        dy /= distance;
+                        food.SetDirection(dx, dy);
+                        food.SetSpeed(attractionSpeed);
+                    }
+                }
+
+            }
+        }
+    }
+
+
+	
     // 15. 적 <-> 적 충돌 처리
     if (!enemys.empty()) {
         for (int i = 0; i < enemys.size(); ++i) {

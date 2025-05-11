@@ -48,6 +48,7 @@ private:
     float enemySpawnTimer;
     float trapSpawnTimer;
     float enemySplitTimer; 
+	float jumboDetectTimer;
     float stopTimer;
     int trapCnt;
     int enemyCnt;

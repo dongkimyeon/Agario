@@ -23,6 +23,7 @@ Jumbo::Jumbo()
     dirX = cos(angle);
     dirY = sin(angle);
     playerDetectRadius = 300.0f;
+    invincibleTime = 5.0f; // 새로 생성된 점보는 5초간 무적
     rect = { (int)(mX - radius), (int)(mY - radius), (int)(mX + radius), (int)(mY + radius) };
 }
 
@@ -31,29 +32,43 @@ void Jumbo::Update(std::vector<Player>& players)
     float currentSpeed = speed; // 현재 속도 (기본 속도)
     bool playerDetected = false;
 
-    // 플레이어 감지 후 플레이어 쪽으로 이동
-    for (size_t i = 0; i < players.size(); ++i)
+    // 무적 시간 감소
+    if (invincibleTime > 0.0f)
     {
-        float dx = players[i].GetPositionX() - mX;
-        float dy = players[i].GetPositionY() - mY;
-        float distance = std::sqrt(dx * dx + dy * dy);
-
-        if (distance <= playerDetectRadius)
+        invincibleTime -= Time::DeltaTime();
+    }
+    else
+    {
+		invincibleTime = 0.0f; // 무적 시간 종료
+    }
+    // 플레이어 감지 후 플레이어 쪽으로 이동
+	if (invincibleTime <= 0.0f)
+	{
+        for (size_t i = 0; i < players.size(); ++i)
         {
-            // 플레이어 감지: 빠른 속도로 플레이어 쪽으로 이동
-            playerDetected = true;
-            currentSpeed = fastSpeed;
-            dirX = dx / distance;
-            dirY = dy / distance;
+            float dx = players[i].GetPositionX() - mX;
+            float dy = players[i].GetPositionY() - mY;
+            float distance = std::sqrt(dx * dx + dy * dy);
 
-            float radiusSum = radius + players[i].GetRadius();
-            if (distance <= radiusSum)
+            if (distance <= playerDetectRadius)
             {
-               
-                
+                // 플레이어 감지: 빠른 속도로 플레이어 쪽으로 이동
+                playerDetected = true;
+                currentSpeed = fastSpeed;
+                dirX = dx / distance;
+                dirY = dy / distance;
+
+                float radiusSum = radius + players[i].GetRadius();
+                if (distance <= radiusSum)
+                {
+
+
+                }
             }
         }
-    }
+	}
+	
+   
 
     // 플레이어를 감지하지 못한 경우 랜덤 이동
     if (!playerDetected)
