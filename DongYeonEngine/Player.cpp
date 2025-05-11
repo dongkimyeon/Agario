@@ -14,10 +14,13 @@ Player::Player()
     color = RGB(8, 136, 248);
     timeSinceSplit = 0.0f;
     isSplit = false;
-    boostTime = 0.5f;
+    boostTime = 0.6f;
     splitTime = 0.0f;
     isBoost;
     isJumbo = false;
+    isProtected = false;
+    spawnJumbo = false;
+    jumboTime = 0.0f;
 }
 
 void Player::Update(float zoomScale, float cameraX, float cameraY, float clientWidth, float clientHeight)
@@ -34,6 +37,7 @@ void Player::Update(float zoomScale, float cameraX, float cameraY, float clientW
             Setradius(radius);
         }
     }
+
     // 분열 중 속도 부스트
     if (isSplit && isBoost)
     {

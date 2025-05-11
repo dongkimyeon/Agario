@@ -161,15 +161,15 @@ void PlayScene::Reset()
         traps.push_back(obj);
     }
 
-    // 점보 객체 초기화
-    while (jumbos.size() < JUMBO_SIZE)
-    {
-        Jumbo obj;
-        float x, y;
-        SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
-        obj.SetPosition(x, y);
-        jumbos.push_back(obj);
-    }
+    //// 점보 객체 초기화
+    //while (jumbos.size() < JUMBO_SIZE)
+    //{
+    //    Jumbo obj;
+    //    float x, y;
+    //    SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
+    //    obj.SetPosition(x, y);
+    //    jumbos.push_back(obj);
+    //}
 
     // 플레이어 객체 초기화
     Player obj;
@@ -184,7 +184,7 @@ void PlayScene::Reset()
         mCameraX = player[0].GetPositionX();
         mCameraY = player[0].GetPositionY();
     }
-    mZoomScale = 2.0f; // 기본 2배 확대
+    mZoomScale = 1.0f; // 기본 2배 확대
 
 }
 
@@ -195,7 +195,7 @@ void PlayScene::Update()
     if (player[0].GetRadius() > maxSize) {
         maxSize = static_cast<int>(player[0].GetRadius());
     }
-    // 1. 입력 처리
+    // 입력 처리
     if (Input::GetKeyDown(eKeyCode::S)) {
         stopFlag = true;
         stopTimer = 0.0f;
@@ -235,7 +235,7 @@ void PlayScene::Update()
         stopFlag = !stopFlag;
     }
 
-    // 2. 타이머 및 시간 갱신
+    // 타이머 및 시간 갱신
     enemySplitTimer += Time::DeltaTime();
     PlayTime += Time::DeltaTime();
     foodSpawnTimer += Time::DeltaTime();
@@ -243,10 +243,11 @@ void PlayScene::Update()
     trapSpawnTimer += Time::DeltaTime();
 
     static std::uniform_int_distribution<int> splitChance(1, 4);
-    if (enemySplitTimer >= 2.0f) {
+
+    if (enemySplitTimer >= 1.0f) {
         allowEnemySplit = (splitChance(gen) == 1);
         enemySplitTimer = 0.0f;
-        std::cout << "Enemy split chance evaluated: allowEnemySplit = " << allowEnemySplit << std::endl;
+      
     }
 
     for (int i = 0; i < player.size(); ++i) {
@@ -258,8 +259,64 @@ void PlayScene::Update()
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
 
-    // 3. 플레이어 분열
-   // Update 메서드 내 플레이어 분열 부분만 수정
+    // 먹이 뱉기
+    if (Input::GetKeyDown(eKeyCode::RButton) && !player.empty())
+    {
+        std::cout << "먹이 뱉기" << std::endl;
+        for (auto& p : player)
+        {
+            float radius = p.GetRadius();
+            if (radius < 15.0f) // 최소 크기 제한
+                continue;
+
+           
+            POINT mousePos = { (INT)Input::GetMousePosition().x, (INT)Input::GetMousePosition().y };
+            float clientWidth = 1600.0f;
+            float clientHeight = 800.0f;
+            float worldX = mCameraX + (mousePos.x - clientWidth / 2.0f) / mZoomScale;
+            float worldY = mCameraY + (mousePos.y - clientHeight / 2.0f) / mZoomScale;
+
+            // 플레이어에서 마우스 방향 계산
+            float x = p.GetPositionX();
+            float y = p.GetPositionY();
+            float dx = worldX - x;
+            float dy = worldY - y;
+            float distance = std::sqrt(dx * dx + dy * dy);
+
+            if (distance < 0.1f) // 너무 가까우면 무시
+                continue;
+
+            // 방향 단위 벡터
+            dx /= distance;
+            dy /= distance;
+
+            // 새로운 먹이 생성
+            Food newFood;
+            float foodRadius = 5.0f; // 뱉는 먹이의 크기
+            newFood.Setradius(foodRadius);
+
+            // 먹이 위치 설정 (플레이어 바깥쪽에서 시작)
+            float offset = p.GetRadius() + foodRadius + 3.0f;
+            newFood.SetPosition(x + dx * offset, y + dy * offset);
+
+            // 먹이 속도 설정
+            float spitSpeed = 300.0f; // 뱉는 속도
+            newFood.SetDirection(dx, dy);
+            newFood.SetSpeed(spitSpeed);
+
+            // 먹이 추가
+            foods.push_back(newFood);
+
+            // 플레이어 크기 감소
+            float newRadius = radius - (foodRadius / 2.0f);
+            if (newRadius < 10.0f) newRadius = 10.0f; // 최소 크기 보장
+            p.Setradius(newRadius);
+
+            std::cout << "먹이 뱉기: 방향 (" << dx << ", " << dy << "), 위치 (" << x + dx * offset << ", " << y + dy * offset << ")" << std::endl;
+        }
+    }
+
+    // 플레이어 분열
     if (Input::GetKeyDown(eKeyCode::LButton) && !player.empty()) {
         POINT mousePos = { (INT)Input::GetMousePosition().x, (INT)Input::GetMousePosition().y };
         // 화면 좌표를 월드 좌표로 변환
@@ -311,24 +368,24 @@ void PlayScene::Update()
         }
     }
 
-    // 4. 플레이어 합치기
-    if (!player.empty() && player.size() > 1) {
+    // 플레이어 합치기
+    if (!player.empty() && player.size() > 1) 
+    {
         auto basePlayer = player.begin();
-        for (auto it = std::next(player.begin()); it != player.end();) {
-            if (it->GetSplitTime() >= 0.5f) {
+        for (auto it = std::next(player.begin()); it != player.end();) 
+        {
+            if (it->GetSplitTime() >= 0.5f) 
+            {
                 float dx = basePlayer->GetPositionX() - it->GetPositionX();
                 float dy = basePlayer->GetPositionY() - it->GetPositionY();
                 float distance = std::sqrt(dx * dx + dy * dy);
 
-                if (distance < 0.1f) {
-                    ++it;
-                    continue;
-                }
+               
 
                 dx /= distance;
                 dy /= distance;
 
-                float moveSpeed = it->GetSpeed() * 3 * Time::DeltaTime();
+                float moveSpeed = it->GetSpeed() * 2 * Time::DeltaTime();
                 it->SetPosition(
                     it->GetPositionX() + dx * moveSpeed,
                     it->GetPositionY() + dy * moveSpeed
@@ -341,7 +398,7 @@ void PlayScene::Update()
                     if (it->GetRadius() > maxSize) {
                         maxSize = static_cast<int>(it->GetRadius());
                     }
-
+                    
                     it = player.erase(it);
                 }
                 else {
@@ -354,59 +411,83 @@ void PlayScene::Update()
         }
     }
 
-    // 5. 플레이어 <-> 트랩 충돌 처리
-    for (size_t i = 0; i < player.size(); ++i) {
-     
-        for (auto jt = traps.begin(); jt != traps.end();) {
+    // 플레이어 <-> 트랩 충돌 처리
+    for (size_t i = 0; i < player.size(); ++i)
+    {
+        for (auto jt = traps.begin(); jt != traps.end();)
+        {
             float dx = jt->GetPositionX() - player[i].GetPositionX();
             float dy = jt->GetPositionY() - player[i].GetPositionY();
             float distance = std::sqrt(dx * dx + dy * dy);
             float radiusSum = jt->GetRadius() + player[i].GetRadius();
 
-            if (distance <= radiusSum && distance > 0.0f) 
+            if (distance <= radiusSum && distance > 0.0f)
             {
-                if (jt->GetRadius() > player[i].GetRadius()) 
+                if (jt->GetRadius() > player[i].GetRadius())
                 {
                     player[i].SetProtected(true);
+                    std::cout << "asd" << std::endl;
                     ++jt;
                 }
-                else {
+                else if (jt->GetRadius() < player[i].GetRadius())
+                {
+                    
                     player[i].SetProtected(false);
-                    // 작은 트랩: 트랩 폭발, 플레이어 분열
                     float radius = player[i].GetRadius();
-                    if (radius >= 25.0f) {
-                        float newRadius = radius / 2.0f;
+                    if (radius >= 25.0f)
+                    {
+                       
+                        float newRadius = radius / 4.0f;
+
+                        
                         player[i].Setradius(newRadius);
 
-                        Player newPlayer;
-                        newPlayer.Setradius(newRadius);
-                        newPlayer.SetColor(player[i].GetColor());
-                        newPlayer.SetSpeed(player[i].GetSpeed());
-                        newPlayer.OnSplit();
+                        for (int k = 0; k < 3; ++k)
+                        {
+                            Player newPlayer;
+                            newPlayer.Setradius(newRadius);
+                            newPlayer.SetColor(player[i].GetColor());
+                            newPlayer.SetSpeed(player[i].GetSpeed());
+                            newPlayer.OnSplit();
 
-                        float x = player[i].GetPositionX();
-                        float y = player[i].GetPositionY();
-                        float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.1415926535f;
-                        float dx = std::cos(angle);
-                        float dy = std::sin(angle);
-                        float offset = newRadius * 2.0f;
+                          
+                            float x = player[i].GetPositionX();
+                            float y = player[i].GetPositionY();
+                           
+                            float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.1415926535f;
+                            float dx = std::cos(angle);
+                            float dy = std::sin(angle);
+                            float offset = newRadius * 2.0f;
 
-                        player[i].SetPosition(x - dx * offset * 0.5f, y - dy * offset * 0.5f);
-                        newPlayer.SetPosition(x + dx * offset * 0.5f, y + dy * offset * 0.5f);
+                            if (k == 0)
+                            {
+                                player[i].SetPosition(x - dx * offset * 0.5f, y - dy * offset * 0.5f);
+                                newPlayer.SetPosition(x + dx * offset * 0.5f, y + dy * offset * 0.5f);
+                            }
+                            else
+                            {
+                               
+                                angle += (k * 2.0f * 3.1415926535f / 3.0f);
+                                dx = std::cos(angle);
+                                dy = std::sin(angle);
+                                newPlayer.SetPosition(x + dx * offset * 0.5f, y + dy * offset * 0.5f);
+                            }
 
-                        player.push_back(newPlayer);
-                       
-                        
+                            player.push_back(newPlayer);
+                        }
                     }
-                    jt = traps.erase(jt); // 트랩 제거
+
+                    jt = traps.erase(jt);
                 }
             }
-            else {
+            else
+            {
+                player[i].SetProtected(false);
                 ++jt;
             }
         }
     }
-    // 6. 플레이어 <-> 음식 충돌 체크
+    // 플레이어 <-> 음식 충돌 체크
     for (auto it = player.begin(); it != player.end();) {
         for (auto jt = foods.begin(); jt != foods.end();) {
             float dx = jt->GetPositionX() - it->GetPositionX();
@@ -431,7 +512,7 @@ void PlayScene::Update()
         it++;
     }
 
-    // 7. 플레이어 <-> 적 충돌 체크
+    //플레이어 <-> 적 충돌 체크
     for (auto it = player.begin(); it != player.end();) {
         bool playerErased = false;
         for (auto jt = enemys.begin(); jt != enemys.end();) {
@@ -442,7 +523,7 @@ void PlayScene::Update()
             if (distance <= radiusSum && distance > 0.0f) 
             {
                 if (it->GetProtected()) {
-                    // 보호 상태: 적과의 충돌 무시
+                  
                     ++jt;
                     continue;
                 }
@@ -489,7 +570,7 @@ void PlayScene::Update()
         }
     }
 
-    // 8. 적 <-> 음식 충돌 체크
+    // 적 <-> 음식 충돌 체크
     for (auto it = enemys.begin(); it != enemys.end();) {
         for (auto jt = foods.begin(); jt != foods.end();) {
             float dx = jt->GetPositionX() - it->GetPositionX();
@@ -509,10 +590,10 @@ void PlayScene::Update()
         it++;
     }
 
-    // 9. 적 분열
+    // 적 분열
     std::vector<Enemy> newEnemies;
     for (auto it = enemys.begin(); it != enemys.end(); ++it) {
-        if (it->GetRadius() > 30.0f && allowEnemySplit) {
+        if (it->GetRadius() > 20.0f && allowEnemySplit) {
             allowEnemySplit = false;
             float radius = it->GetRadius();
             if (radius < 25.0f) {
@@ -549,7 +630,7 @@ void PlayScene::Update()
         enemys.push_back(newEnemy);
     }
 
-    // 10. 적 합체
+    // 적 합체
     if (!enemys.empty()) {
         for (auto it = enemys.begin(); it != enemys.end();) {
             if (!it->GetLeaderFlag() && it->GetSplitTime() >= 2.0f) {
@@ -600,8 +681,8 @@ void PlayScene::Update()
         }
     }
 
-    // 11. 음식 생성
-    if (foodSpawnTimer >= 0.5f && foods.size() < FOOD_SIZE) {
+    // 음식 생성
+    if (foodSpawnTimer >= 0.3f ) {
         Food obj;
         float x, y;
         SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
@@ -610,7 +691,7 @@ void PlayScene::Update()
         foodSpawnTimer = 0.0f;
     }
 
-    // 12. 적 추가
+    // 적 추가
     if (enemySpawnTimer >= 20.0f) {
         Enemy obj;
         float x, y;
@@ -641,32 +722,9 @@ void PlayScene::Update()
     }
 
 
-    // 14. 플레이어 <-> 플레이어 충돌 처리
-    if (!player.empty()) {
-        for (int i = 0; i < player.size(); ++i) {
-            for (int j = i + 1; j < player.size(); ++j) {
-                float dx = player[j].GetPositionX() - player[i].GetPositionX();
-                float dy = player[j].GetPositionY() - player[i].GetPositionY();
-                float distance = std::sqrt(dx * dx + dy * dy);
-                float radiusSum = player[i].GetRadius() + player[j].GetRadius();
+ 
 
-                if (distance < radiusSum && distance > 0.0f) {
-                    float overlap = radiusSum - distance;
-
-                    float nx = dx / distance;
-                    float ny = dy / distance;
-
-                    float pushX = nx * (overlap / 2.0f);
-                    float pushY = ny * (overlap / 2.0f);
-
-                    player[i].SetPosition(player[i].GetPositionX() - pushX, player[i].GetPositionY() - pushY);
-                    player[j].SetPosition(player[j].GetPositionX() + pushX, player[j].GetPositionY() + pushY);
-                }
-            }
-        }
-    }
-
-    // 1. 플레이어 <-> 점보 충돌 처리
+    // 플레이어 <-> 점보 충돌 처리
     if (!player.empty())
     {
         for (int i = 0; i < player.size(); ++i)
@@ -689,14 +747,14 @@ void PlayScene::Update()
                     continue;
                 }
 
-                float dx = it->GetPositionX() - player[i].GetPositionX();
-                float dy = it->GetPositionY() - player[i].GetPositionY();
+                float dx = it->GetPositionX() - player[0].GetPositionX();
+                float dy = it->GetPositionY() - player[0].GetPositionY();
                 float distance = std::sqrt(dx * dx + dy * dy);
-                float radiusSum = it->GetRadius() + player[i].GetRadius();
+                float radiusSum = it->GetRadius() + player[0].GetRadius();
 
-                if (distance < radiusSum && distance > 0.0f)
+                if (distance <= radiusSum && distance > 0.0f)
                 {
-                    player[i].SetJumbo(true);
+                    player[0].SetJumbo(true);
                     it = jumbos.erase(it); // 점보 제거
                 }
                 else
@@ -706,15 +764,15 @@ void PlayScene::Update()
             }
 
             // 2. 점보 상태 플레이어가 음식 끌어당기기
-            if (player[i].GetJumbo())
+            if (player[0].GetJumbo())
             {
                 const float attractionRange = 200.0f;
                 const float attractionSpeed = 100.0f;
 
                 for (auto& food : foods)
                 {
-                    float dx = player[i].GetPositionX() - food.GetPositionX();
-                    float dy = player[i].GetPositionY() - food.GetPositionY();
+                    float dx = player[0].GetPositionX() - food.GetPositionX();
+                    float dy = player[0].GetPositionY() - food.GetPositionY();
                     float distance = std::sqrt(dx * dx + dy * dy);
 
                     if (distance < attractionRange && distance > 0.0f)
@@ -730,9 +788,32 @@ void PlayScene::Update()
         }
     }
 
+    // 플레이어 <-> 플레이어 처리
+    if (!player.empty()) {
+        for (int i = 1; i < player.size(); ++i) {
+            for (int j = i + 1; j < player.size(); ++j) {
+                float dx = player[j].GetPositionX() - player[i].GetPositionX();
+                float dy = player[j].GetPositionY() - player[i].GetPositionY();
+                float distance = std::sqrt(dx * dx + dy * dy);
+                float radiusSum = player[i].GetRadius() + player[j].GetRadius();
 
+                if (distance < radiusSum && distance > 0.0f) {
+                    float overlap = radiusSum - distance;
+
+                    float nx = dx / distance;
+                    float ny = dy / distance;
+
+                    float pushX = nx * (overlap / 2.0f);
+                    float pushY = ny * (overlap / 2.0f);
+
+                    player[i].SetPosition(player[i].GetPositionX() - pushX, player[i].GetPositionY() - pushY);
+                    player[j].SetPosition(player[j].GetPositionX() + pushX, player[j].GetPositionY() + pushY);
+                }
+            }
+        }
+    }
 	
-    // 15. 적 <-> 적 충돌 처리
+    //  적 <-> 적 충돌 처리
     if (!enemys.empty()) {
         for (int i = 0; i < enemys.size(); ++i) {
             for (int j = i + 1; j < enemys.size(); ++j) {
@@ -757,45 +838,37 @@ void PlayScene::Update()
         }
     }
 
-    // 16. 플레이어 업데이트
+   
     for (auto it = player.begin(); it != player.end(); ++it) {
         it->Update(mZoomScale, mCameraX, mCameraY, 1600, 800);
-		if (it->GetProtected()) {
-			std::cout << "Protected: true" << std::endl;
-		}
-        else
-        {
-			std::cout << "Protected: false" << std::endl;
-        }
-	
     }
 
-    // 17. 푸드 업데이트
+
     for (auto it = foods.begin(); it != foods.end(); ++it) {
         it->Update();
     }
 
-    // 18. 적 업데이트
+
     for (auto it = enemys.begin(); it != enemys.end(); ++it) {
         it->Update(foods, player, enemys);
     }
 
-    // 19. 트랩 업데이트
+
     for (auto it = traps.begin(); it != traps.end(); ++it) {
         it->Update();
     }
 
-    // 20. 점보 업데이트
+
     for (auto it = jumbos.begin(); it != jumbos.end(); ++it) {
         it->Update(player);
     }
 
-    // 카메라 좌표 업데이트
+
     if (!player.empty()) {
         mCameraX = player[0].GetPositionX();
         mCameraY = player[0].GetPositionY();
 
-        // 카메라 경계 제한 (clamp 대신 min/max 사용)
+        
         float clientWidth = 1600.0f;
         float clientHeight = 800.0f;
         float worldWidth = 1600.0f;

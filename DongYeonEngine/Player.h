@@ -14,6 +14,7 @@ public:
     void SetSpeed(float s) override { speed = s; }
     void SetColor(COLORREF c) override { color = c; }
 	void SetProtected(bool p) { isProtected = p; }
+    void SetSplitTime(int s) { splitTime = s; }
     void PlusTime(float deltaTime)
     { 
        
@@ -48,13 +49,13 @@ private:
     float timeSinceSplit; // 분열 후 경과 시간
     bool isSplit; // 분열 상태인지 여부
     bool isBoost;
-    float splitTime = 0.0f;
-    float boostTime = 0.5f; // 속도 부스트 지속 시간
-	bool isProtected = false; // 보호 상태
-    bool isJumbo = false;
+    float splitTime;
+    float boostTime; // 속도 부스트 지속 시간
+	bool isProtected; // 보호 상태
+    bool isJumbo;
 	float foodDetectDistance = 250.0f; // 음식 탐지 거리
-    float jumboTime = 0.0f; // 점보 상태 지속 시간
-    bool spawnJumbo = false; // 점보 생성 플래그
+    float jumboTime; // 점보 상태 지속 시간
+    bool spawnJumbo; // 점보 생성 플래그
     // 속도 계산용 상수
     static constexpr float BASE_RADIUS = 30.0f; // 기준 반지름
     static constexpr float BASE_SPEED = 80.0f; // 기준 속도

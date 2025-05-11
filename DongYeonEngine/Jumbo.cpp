@@ -46,8 +46,8 @@ void Jumbo::Update(std::vector<Player>& players)
 	{
         for (size_t i = 0; i < players.size(); ++i)
         {
-            float dx = players[i].GetPositionX() - mX;
-            float dy = players[i].GetPositionY() - mY;
+            float dx = players[0].GetPositionX() - mX;
+            float dy = players[0].GetPositionY() - mY;
             float distance = std::sqrt(dx * dx + dy * dy);
 
             if (distance <= playerDetectRadius)
@@ -58,7 +58,7 @@ void Jumbo::Update(std::vector<Player>& players)
                 dirX = dx / distance;
                 dirY = dy / distance;
 
-                float radiusSum = radius + players[i].GetRadius();
+                float radiusSum = radius + players[0].GetRadius();
                 if (distance <= radiusSum)
                 {
 
