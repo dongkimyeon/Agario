@@ -5,7 +5,7 @@
 #include "Enemy.h"
 #include "Trap.h"
 #include "Jumbo.h"
-#include "Camera.h"
+
 #include "SceneManager.h"
 
 class PlayScene : public Scene

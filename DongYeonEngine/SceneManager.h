@@ -1,6 +1,6 @@
 #pragma once
 #include "Scene.h"
-
+#include "CommonInclude.h"
 
 class SceneManager
 {
@@ -38,7 +38,7 @@ private:
 	//static std::vector<Scene*> mScene;
 	static std::map<std::wstring, Scene*> mScene;
 	static Scene* mActiveScene;
-	
+	static Gdiplus::Image* mMouseCursorImage;
 	
 
 };

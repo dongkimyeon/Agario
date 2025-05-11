@@ -3,8 +3,10 @@
 #include "Game.h"
 #include "LoadScenes.h"
 #include "Input.h"
-#define MAX_LOADSTRING 100
+#include "Resource.h"
 
+#define MAX_LOADSTRING 100
+#define IDI_ICON1 129
 //#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
 
 Game GAME;
@@ -74,7 +76,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DONGYEONENGINE));
-    wcex.hCursor = LoadCursor(nullptr, IDC_CROSS);
+    wcex.hCursor = LoadCursor(NULL, NULL);
+    
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName = nullptr; // 메뉴바 제거: nullptr로 설정
     wcex.lpszClassName = szWindowClass;
@@ -96,6 +99,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     {
         return FALSE;
     }
+    
+  
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
@@ -108,11 +113,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+    {
+        ShowCursor(false);
+        break;
+    }
     case WM_MOUSEWHEEL:
     {
         Input::UpdateMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam)); // 마우스 휠 처리
         break;
     }
+   
     case WM_PAINT:
     {
         PAINTSTRUCT ps;

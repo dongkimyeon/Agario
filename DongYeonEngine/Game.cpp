@@ -23,7 +23,7 @@ void Game::Initialize(HWND hwnd, UINT width, UINT height)
 	adjustWindowRect(hwnd, width, height);
 	createBuffer(width, height);
 	initializeEtc();
-
+	
 	SceneManager::Initialize();
 }
 void Game::Run()
@@ -37,6 +37,7 @@ void Game::Update()
 	Input::Update();
 	Time::Update();
 	SceneManager::Update();
+
 }
 void Game::LateUpdate()
 {
@@ -46,15 +47,18 @@ void Game::Render()
 {
 	clearRenderTarget();
 
-	//Time::Render(mBackHdc);
 	SceneManager::Render(mBackHdc);
+
+	Gdiplus::Graphics graphics(mBackHdc);
+	
+
 
 	copyRenderTarget(mBackHdc, mHdc);
 }
 
 void Game::clearRenderTarget()
 {
-	//clear
+	
 	Rectangle(mBackHdc, -1, -1, 1601, 901);
 }
 
@@ -81,10 +85,10 @@ void Game::adjustWindowRect(HWND hwnd, UINT width, UINT height)
 
 void Game::createBuffer(UINT width, UINT height)
 {
-	//윈도우 해상도에 맞는 백버퍼(도화지)생성
+
 	mBackBitmap = CreateCompatibleBitmap(mHdc, width, height);
 
-	//백버퍼를 가르킬 DC생성
+
 	mBackHdc = CreateCompatibleDC(mHdc);
 
 	HBITMAP oldBitmap = (HBITMAP)SelectObject(mBackHdc, mBackBitmap);

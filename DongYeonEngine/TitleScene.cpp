@@ -1,6 +1,7 @@
 #include "TitleScene.h"
 #include "SceneManager.h"
 #include "Input.h"
+#include "Time.h"
 #include <cmath>
 
 extern const UINT width;
@@ -77,8 +78,7 @@ void TitleScene::Initialize()
 
 void TitleScene::Update()
 {
-    Scene::Update();
-
+  
     Vector2 mousePos = Input::GetMousePosition();
 
     // 마우스가 게임 시작 버튼 위에 있는지 확인
@@ -110,12 +110,9 @@ void TitleScene::LateUpdate()
 
 void TitleScene::Render(HDC hdc)
 {
-    Scene::Render(hdc);
+    
     Gdiplus::Graphics graphics(hdc);
 
-    //Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
-    //Rectangle(hdc, ExitButton.left, ExitButton.top, ExitButton.right, ExitButton.bottom);
- //  
     graphics.DrawImage(mBackgroundImage, 0, 0, width, height);
 
     graphics.DrawImage(mLogoImage, width / 2 - 330, height / 2 - 200, 237 * 3, 114 * 3);
@@ -130,4 +127,12 @@ void TitleScene::Render(HDC hdc)
         graphics.DrawImage(mExitImage2, width / 2 - 100, height / 2 + 200, 237, 114);
     else
         graphics.DrawImage(mExitImage1, width / 2 - 100, height / 2 + 200, 237, 114);
+
+    // 랜덤 색상의 원 그리기
+    int r = rand() % 256; // 0~255
+    int g = rand() % 256;
+    int b = rand() % 256;
+    Gdiplus::SolidBrush brush(Gdiplus::Color(255, r, g, b));
+    graphics.FillEllipse(&brush, width / 2 - 50, height / 2 - 50, 100, 100); // 중앙에 반지름 50px 원
+
 }
