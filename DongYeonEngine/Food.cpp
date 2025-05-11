@@ -44,10 +44,10 @@ void Food::LateUpdate()
 {
 }
 
-void Food::Render(HDC hdc)
+void Food::Render(Gdiplus::Graphics& graphics)
 {
 
-	Graphics graphics(hdc);
+	
 	graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 	graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
 	

@@ -9,7 +9,7 @@ public:
     Enemy();
     void Update(std::vector<Food>& foods, std::vector<Player>& players, std::vector<Enemy>& enemies);
     void LateUpdate() override;
-    void Render(HDC hdc) override;
+    void Render(Gdiplus::Graphics& graphics) override;
 
     void SetPosition(float x, float y) override
     {

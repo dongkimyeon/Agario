@@ -40,6 +40,12 @@ private:
     float exclamationX = 0.0f; // 느낌표 X 좌표
     float exclamationY = 0.0f; // 느낌표 Y 좌표
    
+    //카메라 부분 
+    float mZoomScale; 
+    HDC mMemDC;       // 메모리 DC 
+    HBITMAP mMemBitmap; // 메모리 DC용 비트맵
+    float mCameraX = 0.0f; // 현재 카메라 X 위치
+    float mCameraY = 0.0f; // 현재 카메라 Y 위치
 
     ULONG_PTR mGdiplusToken;         // GDI+ 토큰
 	bool isExclamationPositionSet = false; // 느낌표 위치 설정 여부

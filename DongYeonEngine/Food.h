@@ -7,7 +7,7 @@ public:
 	Food();
 	void Update() override;
 	void LateUpdate() override;
-	void Render(HDC hdc) override;
+	void Render(Gdiplus::Graphics& graphics) override;
 
 	void SetPosition(float x, float y) override;
 	void SetDirection(float dx, float dy) { dirX = dx; dirY = dy; }

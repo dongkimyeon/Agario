@@ -173,11 +173,18 @@ void PlayScene::Reset()
 
     // 플레이어 객체 초기화
     Player obj;
-    float x, y;
-    SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
-    obj.SetPosition(x, y);
+    obj.SetPosition(800, 400);
     player.push_back(obj);
 
+
+    
+
+    // 카메라 초기화 추가
+    if (!player.empty()) {
+        mCameraX = player[0].GetPositionX();
+        mCameraY = player[0].GetPositionY();
+    }
+    mZoomScale = 2.0f; // 기본 2배 확대
 
 }
 
@@ -252,16 +259,19 @@ void PlayScene::Update()
     int seconds = static_cast<int>(PlayTime) % 60;
 
     // 3. 플레이어 분열
+   // Update 메서드 내 플레이어 분열 부분만 수정
     if (Input::GetKeyDown(eKeyCode::LButton) && !player.empty()) {
-        POINT mousePos;
-        mousePos.x = Input::GetMousePosition().x;
-        mousePos.y = Input::GetMousePosition().y;
+        POINT mousePos = { (INT)Input::GetMousePosition().x, (INT)Input::GetMousePosition().y };
+        // 화면 좌표를 월드 좌표로 변환
+        float clientWidth = 1600.0f;
+        float clientHeight = 800.0f;
+        float worldX = mCameraX + (mousePos.x - clientWidth / 2.0f) / mZoomScale;
+        float worldY = mCameraY + (mousePos.y - clientHeight / 2.0f) / mZoomScale;
 
         std::vector<Player> newPlayers;
 
         for (auto it = player.begin(); it != player.end(); ++it) {
             float radius = it->GetRadius();
-
             if (radius < 25.0f) {
                 continue;
             }
@@ -277,8 +287,8 @@ void PlayScene::Update()
 
             float x = it->GetPositionX();
             float y = it->GetPositionY();
-            float dx = static_cast<float>(mousePos.x) - x;
-            float dy = static_cast<float>(mousePos.y) - y;
+            float dx = worldX - x; // 월드 좌표 사용
+            float dy = worldY - y;
             float distance = std::sqrt(dx * dx + dy * dy);
 
             if (distance < 0.1f) {
@@ -780,7 +790,35 @@ void PlayScene::Update()
         it->Update(player);
     }
 
+    // 카메라 좌표 업데이트
+    if (!player.empty()) {
+        mCameraX = player[0].GetPositionX();
+        mCameraY = player[0].GetPositionY();
 
+        // 카메라 경계 제한 (clamp 대신 min/max 사용)
+        float clientWidth = 1600.0f;
+        float clientHeight = 800.0f;
+        float worldWidth = 1600.0f;
+        float worldHeight = 800.0f;
+        float scaledWidth = clientWidth / mZoomScale;
+        float scaledHeight = clientHeight / mZoomScale;
+
+        // mCameraX 제한
+        if (mCameraX < scaledWidth / 2.0f) {
+            mCameraX = scaledWidth / 2.0f;
+        }
+        else if (mCameraX > worldWidth - scaledWidth / 2.0f) {
+            mCameraX = worldWidth - scaledWidth / 2.0f;
+        }
+
+        // mCameraY 제한
+        if (mCameraY < scaledHeight / 2.0f) {
+            mCameraY = scaledHeight / 2.0f;
+        }
+        else if (mCameraY > worldHeight - scaledHeight / 2.0f) {
+            mCameraY = worldHeight - scaledHeight / 2.0f;
+        }
+    }
 }
 
 void PlayScene::LateUpdate()
@@ -790,74 +828,80 @@ void PlayScene::LateUpdate()
 
 void PlayScene::Render(HDC hdc)
 {
-    // GDI+ Graphics 객체 생성
     Gdiplus::Graphics graphics(hdc);
     if (graphics.GetLastStatus() != Gdiplus::Ok) {
-        // std::cout << "Failed to create GDI+ Graphics object" << std::endl;
+        std::cout << "Failed to create GDI+ Graphics object" << std::endl;
         return;
     }
+
+    // 카메라 변환 설정
+    float clientWidth = 1600.0f;
+    float clientHeight = 800.0f;
+    Gdiplus::Matrix transform;
+    // 1. 화면 중심으로 이동
+    transform.Translate(clientWidth / 2.0f, clientHeight / 2.0f);
+    // 2. 줌 적용
+    transform.Scale(mZoomScale, mZoomScale);
+    // 3. 카메라 위치로 이동
+    transform.Translate(-mCameraX, -mCameraY);
+    graphics.SetTransform(&transform);
+
+    // 격자 배경 그리기
+    Gdiplus::Pen gridPen(Gdiplus::Color(255, 100, 100, 100), 1.0f);
+    const float gridSize = 50.0f;
+    const float worldWidth = 1600.0f;
+    const float worldHeight = 800.0f;
+
+    for (float x = 0; x <= worldWidth; x += gridSize) {
+        graphics.DrawLine(&gridPen, x, 0.0f, x, worldHeight);
+    }
+    for (float y = 0; y <= worldHeight; y += gridSize) {
+        graphics.DrawLine(&gridPen, 0.0f, y, worldWidth, y);
+    }
+
+    // 느낌표 이미지 렌더링
     INT size = 100;
-    if (showExclamation && trapSpawnTimer >= 8.0f && trapSpawnTimer <= 8.4f)
-    {
+    if (showExclamation && trapSpawnTimer >= 8.0f && trapSpawnTimer <= 8.4f) {
         Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
         graphics.DrawImage(mWarnningImage, rect);
     }
-    if (showExclamation && trapSpawnTimer > 8.4f && trapSpawnTimer <= 8.8f)
-    {
+    if (showExclamation && trapSpawnTimer > 8.4f && trapSpawnTimer <= 8.8f) {
         Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
         graphics.DrawImage(mWarnningImage2, rect);
     }
-    if (showExclamation && trapSpawnTimer > 8.8f && trapSpawnTimer <= 9.2f)
-    {
+    if (showExclamation && trapSpawnTimer > 8.8f && trapSpawnTimer <= 9.2f) {
         Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
         graphics.DrawImage(mWarnningImage3, rect);
     }
-    if (showExclamation && trapSpawnTimer > 9.2f && trapSpawnTimer <= 9.6f)
-    {
+    if (showExclamation && trapSpawnTimer > 9.2f && trapSpawnTimer <= 9.6f) {
         Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
         graphics.DrawImage(mWarnningImage4, rect);
     }
-    if (showExclamation && trapSpawnTimer > 9.6f && trapSpawnTimer <= 10.0f)
-    {
+    if (showExclamation && trapSpawnTimer > 9.6f && trapSpawnTimer <= 10.0f) {
         Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
         graphics.DrawImage(mWarnningImage5, rect);
     }
-    // 플레이어 렌더링
-    for (auto it = player.begin(); it != player.end(); ++it)
-    {
-        it->Render(hdc);
+
+    // 오브젝트 렌더링
+    for (auto& p : player) {
+        p.Render(graphics);
+    }
+    for (auto& f : foods) {
+        f.Render(graphics);
+    }
+    for (auto& e : enemys) {
+        e.Render(graphics);
+    }
+    for (auto& t : traps) {
+        t.Render(graphics);
+    }
+    for (auto& j : jumbos) {
+        j.Render(graphics);
     }
 
-    // 음식 객체 렌더링
-    for (auto it = foods.begin(); it != foods.end(); ++it)
-    {
-        it->Render(hdc);
-    }
-
-    // 적 객체 렌더링
-    for (auto it = enemys.begin(); it != enemys.end(); ++it)
-    {
-        it->Render(hdc);
-    }
-
-    // 트랩 객체 렌더링
-    for (auto it = traps.begin(); it != traps.end(); ++it)
-    {
-        it->Render(hdc);
-    }
-
-    // 점보 객체 렌더링
-    for (auto it = jumbos.begin(); it != jumbos.end(); ++it)
-    {
-        it->Render(hdc);
-    }
-
-    if (!player.empty()) {
-        //camera.Update(&player[0]); // 주석 처리된 카메라 업데이트
-    }
-
-    // GDI+ 텍스트 렌더링 준비
-    Gdiplus::Font font(L"Arial", 25, Gdiplus::FontStyleBold, Gdiplus::UnitPixel); // 폰트 크기 24로 증가
+    // 텍스트 렌더링 (카메라 변환 해제)
+    graphics.ResetTransform();
+    Gdiplus::Font font(L"Arial", 25, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
     if (font.GetLastStatus() != Gdiplus::Ok) {
         std::cout << "Failed to create font" << std::endl;
         return;
@@ -865,54 +909,34 @@ void PlayScene::Render(HDC hdc)
 
     Gdiplus::SolidBrush brush(Gdiplus::Color(255, 255, 255, 255));
     Gdiplus::StringFormat format;
-    format.SetAlignment(Gdiplus::StringAlignmentNear); // 왼쪽 정렬
+    format.SetAlignment(Gdiplus::StringAlignmentNear);
 
-    // 반투명 배경 사각형 (가독성 향상)
-    Gdiplus::SolidBrush bgBrush(Gdiplus::Color(128, 0, 0, 0)); // 반투명 검은색
+    Gdiplus::SolidBrush bgBrush(Gdiplus::Color(128, 0, 0, 0));
 
-
-    // 플레이 시간, 최대 반지름, 먹은 음식 개수 계산
     int minutes = static_cast<int>(PlayTime) / 60;
     int seconds = static_cast<int>(PlayTime) % 60;
 
     float max = 0;
-
-    for (auto it = player.begin(); it != player.end(); ++it)
-    {
-        if (it->GetRadius() > max)
-            max = it->GetRadius();
+    for (auto& p : player) {
+        if (p.GetRadius() > max) max = p.GetRadius();
     }
 
-
-    // 텍스트 문자열 생성
     wchar_t timeBuffer[50];
     swprintf(timeBuffer, 50, L"Play Time: %d분 %d초", minutes, seconds);
     std::wstring timeText = timeBuffer;
 
     wchar_t radiusBuffer[50];
-    swprintf(radiusBuffer, 50, L"Player Radius: %.1f", max); // 소수점 한 자리 출력
+    swprintf(radiusBuffer, 50, L"Player Radius: %.1f", max);
     std::wstring radiusText = radiusBuffer;
 
     wchar_t eatCntBuffer[50];
     swprintf(eatCntBuffer, 50, L"Player Food Cnt: %d", eatCnt);
     std::wstring eatCntText = eatCntBuffer;
-    // 텍스트 렌더링
 
-    if (printFlag)
-    {
-        graphics.FillRectangle(&bgBrush, 5, 5, 300, 100); // 텍스트 배경
+    if (printFlag) {
+        graphics.FillRectangle(&bgBrush, 5, 5, 300, 100);
         graphics.DrawString(timeText.c_str(), -1, &font, Gdiplus::PointF(10.0f, 10.0f), &format, &brush);
         graphics.DrawString(radiusText.c_str(), -1, &font, Gdiplus::PointF(10.0f, 40.0f), &format, &brush);
         graphics.DrawString(eatCntText.c_str(), -1, &font, Gdiplus::PointF(10.0f, 70.0f), &format, &brush);
-
-
     }
-
-    Gdiplus::SolidBrush brush2(Gdiplus::Color(255, 0, 0, 0)); //마우스 검은색
-    //// 마우스 좌표 출력
-    //std::wstring mouseText = L"X: " + std::to_wstring((int)Input::GetMousePosition().x) +
-    //                         L" Y: " + std::to_wstring((int)Input::GetMousePosition().y);
-    //graphics.DrawString(mouseText.c_str(), -1, &font, 
-    //                   Gdiplus::PointF(Input::GetMousePosition().x + 10.0f, Input::GetMousePosition().y), 
-    //                   &format, &brush2);
 }

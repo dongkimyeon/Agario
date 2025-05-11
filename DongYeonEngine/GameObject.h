@@ -9,7 +9,7 @@ public:
 
 	 virtual void Update();
 	 virtual void LateUpdate();
-	 virtual void Render(HDC hdc);
+	 virtual void Render(Gdiplus::Graphics& graphics);
 
 	 virtual void SetPosition(float x, float y)
 	 {

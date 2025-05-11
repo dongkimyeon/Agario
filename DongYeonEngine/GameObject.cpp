@@ -23,7 +23,7 @@ void GameObject::LateUpdate()
 
 }
 
-void GameObject::Render(HDC hdc)
+void GameObject::Render(Gdiplus::Graphics& graphics)
 {
 	
 }

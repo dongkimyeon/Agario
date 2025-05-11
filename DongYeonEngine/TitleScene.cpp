@@ -113,9 +113,9 @@ void TitleScene::Render(HDC hdc)
     Scene::Render(hdc);
     Gdiplus::Graphics graphics(hdc);
 
-	Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
-	Rectangle(hdc, ExitButton.left, ExitButton.top, ExitButton.right, ExitButton.bottom);
-   
+	//Rectangle(hdc, startButton.left, startButton.top, startButton.right, startButton.bottom);
+	//Rectangle(hdc, ExitButton.left, ExitButton.top, ExitButton.right, ExitButton.bottom);
+ //  
     graphics.DrawImage(mBackgroundImage, 0, 0, width, height);
 
     graphics.DrawImage(mLogoImage, width / 2 - 330, height / 2 -200 , 237 *3, 114*3);

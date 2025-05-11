@@ -70,9 +70,8 @@ void Trap::LateUpdate()
 {
 }
 
-void Trap::Render(HDC hdc)
+void Trap::Render(Gdiplus::Graphics& graphics)
 {
-    Graphics graphics(hdc);
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
     graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
 

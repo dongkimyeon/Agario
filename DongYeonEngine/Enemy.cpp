@@ -194,9 +194,9 @@ void Enemy::LateUpdate()
 
 }
 
-void Enemy::Render(HDC hdc)
+void Enemy::Render(Gdiplus::Graphics& graphics)
 {
-	Graphics graphics(hdc);
+	
 	graphics.SetSmoothingMode(SmoothingModeAntiAlias);
     graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
 	// GDI+ 색상 객체 생성
@@ -213,12 +213,15 @@ void Enemy::Render(HDC hdc)
 	graphics.FillEllipse(&brush, rect.left, rect.top, ellipseWidth, ellipseHeight);
     graphics.DrawEllipse(&pen, rect.left, rect.top, ellipseWidth, ellipseHeight);
 
-    // 플레이어 감지 범위 렌더링 (빨간 선)
-    Pen detectPen(Color(255, 0, 0), 2); // 빨간색, 두께 2
-    float detectDiameter = detectPlayerRange * 2.0f;
-    float detectLeft = mX - detectPlayerRange;
-    float detectTop = mY - detectPlayerRange;
-    graphics.DrawEllipse(&detectPen, detectLeft, detectTop, detectDiameter, detectDiameter);
+    // 플레이어 감지 범위 원 그리기
+    {
+        // 반투명한 빨간색 원으로 감지 범위 시각화
+        SolidBrush detectBrush(Color(50, 255, 0, 0)); // ARGB: 50% 투명도, 빨간색
+        Pen detectPen(Color(255, 255, 0, 0), 1); // 감지 범위 테두리 (불투명 빨간색)
+        float detectDiameter = detectPlayerRange * 2;
+        graphics.FillEllipse(&detectBrush, mX - detectPlayerRange, mY - detectPlayerRange, detectDiameter, detectDiameter);
+        graphics.DrawEllipse(&detectPen, mX - detectPlayerRange, mY - detectPlayerRange, detectDiameter, detectDiameter);
+    }
 
 }
 

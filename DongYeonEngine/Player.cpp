@@ -88,15 +88,12 @@ void Player::LateUpdate()
 {
 }
 
-void Player::Render(HDC hdc)
+void Player::Render(Gdiplus::Graphics& graphics)
 {
-    Graphics graphics(hdc);
-
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
     if (!isJumbo)
     {
-     
         Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
         SolidBrush brush(gdiBrushColor);
         Color gdiPenColor(GetRValue(color) * 0.6, GetGValue(color) * 0.6, GetBValue(color) * 0.6);
@@ -109,11 +106,9 @@ void Player::Render(HDC hdc)
     }
     else
     {
-
-        // Jumbo 본체 (삼각형) 그리기
         Color gdiBrushColor(255, 0, 255);
         SolidBrush brush(gdiBrushColor);
-        Color gdiPenColor(255 * 0.6, GetGValue(color) * 0.6, 255 * 0.6);
+        Color gdiPenColor(255 * 0.6, 0, 255 * 0.6);
         Pen pen(gdiPenColor, 4);
 
         POINT points[3];
@@ -131,7 +126,6 @@ void Player::Render(HDC hdc)
         graphics.FillPolygon(&brush, (Gdiplus::Point*)points, 3);
         graphics.DrawPolygon(&pen, (Gdiplus::Point*)points, 3);
     }
- 
 }
 
 void Player::Setradius(float r)

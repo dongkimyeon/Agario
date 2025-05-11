@@ -3,6 +3,8 @@
 #include "Input.h"
 #include "PlayScene.h"
 #include <cmath>
+#include <iomanip> // std::fixed, std::setprecision
+#include <sstream> // std::wstringstream
 
 extern const UINT width;
 extern const UINT height;
@@ -16,9 +18,7 @@ EndScene::EndScene()
     : mBackgroundImage(nullptr)
     , mGdiplusToken(0)
     , startButton({ 400, 500, 1200, 650 })
-    
 {
-    // GDI+ 초기화
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     Gdiplus::GdiplusStartup(&mGdiplusToken, &gdiplusStartupInput, nullptr);
 }
@@ -27,22 +27,23 @@ EndScene::~EndScene()
 {
     if (mBackgroundImage != nullptr)
     {
-        delete mBackgroundImage; // 이미지 객체 해제
+        delete mBackgroundImage;
         mBackgroundImage = nullptr;
     }
-
-    // GDI+ 종료
+    if (mGameOverimage != nullptr)
+    {
+        delete mGameOverimage;
+        mGameOverimage = nullptr;
+    }
     if (mGdiplusToken != 0)
     {
         Gdiplus::GdiplusShutdown(mGdiplusToken);
         mGdiplusToken = 0;
     }
-
 }
 
 void EndScene::Initialize()
 {
-    // 이미지 로드
     mBackgroundImage = new Gdiplus::Image(L"resources/EndAgario.png");
     mGameOverimage = new Gdiplus::Image(L"resources/GameOver.png");
 }
@@ -80,21 +81,26 @@ void EndScene::Render(HDC hdc)
     }
 
     graphics.DrawImage(mGameOverimage, width / 2 - 330, height / 2 - 270, 237 * 3, 114 * 3);
-   
+
     // 폰트 및 브러시 설정
     Gdiplus::Font font(L"Arial", 40, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
-    Gdiplus::SolidBrush brush(Gdiplus::Color(0, 0, 0)); // 빨간색 텍스트
+    Gdiplus::SolidBrush brush(Gdiplus::Color(0, 0, 0));
     Gdiplus::StringFormat format;
     format.SetAlignment(Gdiplus::StringAlignmentCenter);
 
-    // 텍스트 위치 (고정 위치로 테스트)
-    Gdiplus::PointF textPosition(width/2, height/2 + 30);
+    // 텍스트 위치
+    Gdiplus::PointF textPosition(width / 2, height / 2 + 30);
+
+    
+    std::wstringstream wss;
+    wss << std::fixed << std::setprecision(2) << maxSize;
+    std::wstring sizeStr = L"Highest Radius: " + wss.str();
 
     // 결과 문자열
     std::wstring timeStr = L"Play Time: " + std::to_wstring(endMin) + L"min " + std::to_wstring(endSec) + L"sec";
-    std::wstring sizeStr = L"Highest Radius: " + std::to_wstring(maxSize);
     std::wstring eatStr = L"Eat Count: " + std::to_wstring(endEatCnt);
     std::wstring info = L"Press Spacebar to Title";
+
     // 텍스트 렌더링
     graphics.DrawString(timeStr.c_str(), -1, &font, textPosition, &format, &brush);
     graphics.DrawString(sizeStr.c_str(), -1, &font, Gdiplus::PointF(textPosition.X, textPosition.Y + 60), &format, &brush);

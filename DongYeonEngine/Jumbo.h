@@ -8,7 +8,7 @@ public:
     Jumbo();
     void Update(std::vector<Player>& players);
     void LateUpdate() override;
-    void Render(HDC hdc) override;
+    void Render(Gdiplus::Graphics& graphics) override;
 
     void SetPosition(float x, float y) override;
     void SetDirection(float a, float b) { dirX = a; dirY = b; }

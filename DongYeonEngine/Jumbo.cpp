@@ -18,7 +18,7 @@ Jumbo::Jumbo()
     radius = 30.0f;
     speed = 100.0f; // 기본 속도
     fastSpeed = 200.0f; // 플레이어 감지 시 빠른 속도
-    // 초기 랜덤 각도 설정
+    
     float angle = distAngle(gen);
     dirX = cos(angle);
     dirY = sin(angle);
@@ -109,9 +109,9 @@ void Jumbo::LateUpdate()
 {
 }
 
-void Jumbo::Render(HDC hdc)
+void Jumbo::Render(Gdiplus::Graphics& graphics)
 {
-    Graphics graphics(hdc);
+    
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
     // 플레이어 감지 범위 원 그리기
