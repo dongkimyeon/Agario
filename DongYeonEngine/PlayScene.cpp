@@ -289,7 +289,7 @@ void PlayScene::Update()
             // 방향 단위 벡터
             dx /= distance;
             dy /= distance;
-
+            //ㅁㄴㅇ
             // 새로운 먹이 생성
             Food newFood;
             float foodRadius = 5.0f; // 뱉는 먹이의 크기
