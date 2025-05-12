@@ -945,17 +945,17 @@ void PlayScene::Render(HDC hdc)
     graphics.SetTransform(&transform);
 
     //// 격자 배경 그리기
-    //Gdiplus::Pen gridPen(Gdiplus::Color(255, 122, 122, 122), 1.0f);
-    //const float gridSize = 50.0f;
-    //const float worldWidth = 1600.0f;
-    //const float worldHeight = 800.0f;
+    Gdiplus::Pen gridPen(Gdiplus::Color(255, 122, 122, 122), 1.0f);
+    const float gridSize = 50.0f;
+    const float worldWidth = 1600.0f;
+    const float worldHeight = 800.0f;
 
-    //for (float x = 0; x <= worldWidth; x += gridSize) {
-    //    graphics.DrawLine(&gridPen, x, 0.0f, x, worldHeight);
-    //}
-    //for (float y = 0; y <= worldHeight; y += gridSize) {
-    //    graphics.DrawLine(&gridPen, 0.0f, y, worldWidth, y);
-    //}
+    for (float x = 0; x <= worldWidth; x += gridSize) {
+        graphics.DrawLine(&gridPen, x, 0.0f, x, worldHeight);
+    }
+    for (float y = 0; y <= worldHeight; y += gridSize) {
+        graphics.DrawLine(&gridPen, 0.0f, y, worldWidth, y);
+    }
 
     // 느낌표 이미지 렌더링
     INT size = 100;

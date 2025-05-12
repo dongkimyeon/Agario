@@ -145,7 +145,6 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="TitleScene.h" />
-    <ClInclude Include="Transform.h" />
     <ClInclude Include="Trap.h" />
   </ItemGroup>
   <ItemGroup>
@@ -167,7 +166,6 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TitleScene.cpp" />
-    <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Trap.cpp" />
   </ItemGroup>
   <ItemGroup>

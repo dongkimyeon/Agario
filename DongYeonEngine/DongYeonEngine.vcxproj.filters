@@ -81,9 +81,6 @@
     <ClInclude Include="Camera.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Transform.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="EndScene.h">
       <Filter>Scenes</Filter>
     </ClInclude>
@@ -142,9 +139,6 @@
     </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="Transform.cpp">
-      <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="EndScene.cpp">
       <Filter>Scenes</Filter>

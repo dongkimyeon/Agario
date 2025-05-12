@@ -102,7 +102,7 @@ void Player::LateUpdate()
 
 void Player::Render(Gdiplus::Graphics& graphics)
 {
-    graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+   // graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
     if (!isJumbo)
     {
