@@ -318,7 +318,7 @@ void PlayScene::Update()
             float foodRadius = 5.0f; // 뱉는 먹이의 크기
             newFood.Setradius(foodRadius);
             newFood.SetPlayerCreate(true); // 뱉어진 먹이로 표시
-            newFood.SetMoveTime(1.0f); // 1초 동안 이동
+            newFood.SetMoveTime(0.5f); // 1초 동안 이동
 
             // 먹이 위치 설정 (플레이어 바깥쪽에서 시작)
             float offset = p.GetRadius() + foodRadius + 3.0f;
@@ -341,7 +341,7 @@ void PlayScene::Update()
         }
     }
     // 플레이어 분열
-    if (Input::GetKeyDown(eKeyCode::LButton) && !player.empty()) {
+    if (Input::GetKeyDown(eKeyCode::LButton) && !player.empty() && !player[0].GetJumbo()) {
         POINT mousePos = { (INT)Input::GetMousePosition().x, (INT)Input::GetMousePosition().y };
         // 화면 좌표를 월드 좌표로 변환
         float clientWidth = 1600.0f;
@@ -494,7 +494,7 @@ void PlayScene::Update()
                                 angle += (k * 2.0f * 3.1415926535f / 3.0f);
                                 dx = std::cos(angle);
                                 dy = std::sin(angle);
-                                newPlayer.SetPosition(x + dx * offset * 0.5f, y + dy * offset * 0.5f);
+                                newPlayer.SetPosition(x + dx * offset * 2.0f, y + dy * offset * 2.0f);
                             }
 
                             player.push_back(newPlayer);
@@ -706,7 +706,7 @@ void PlayScene::Update()
     }
 
     // 음식 생성
-    if (foodSpawnTimer >= 0.3f ) {
+    if (foodSpawnTimer >= 0.5f ) {
         Food obj;
         float x, y;
         SetNonOverlappingPosition(x, y, obj.GetRadius(), foods, enemys, traps, jumbos, player);
@@ -926,10 +926,7 @@ void PlayScene::LateUpdate()
 void PlayScene::Render(HDC hdc)
 {
     Gdiplus::Graphics graphics(hdc);
-    Gdiplus::SolidBrush backGroundBrush(Gdiplus::Color(226, 226, 226, 226));
-    Gdiplus::Rect backGroundRect(0, 0, 1600, 800);
-    graphics.FillRectangle(&backGroundBrush, backGroundRect);
-
+    
     if (graphics.GetLastStatus() != Gdiplus::Ok) {
         std::cout << "Failed to create GDI+ Graphics object" << std::endl;
         return;

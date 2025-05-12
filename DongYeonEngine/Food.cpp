@@ -53,7 +53,7 @@ void Food::Render(Gdiplus::Graphics& graphics)
 
 	
 	graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-	graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+	//graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
 	
 	Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
 	SolidBrush brush(gdiBrushColor);

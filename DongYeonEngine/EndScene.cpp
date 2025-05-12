@@ -18,6 +18,7 @@ EndScene::EndScene()
     : mBackgroundImage(nullptr)
     , mGdiplusToken(0)
     , startButton({ 400, 500, 1200, 650 })
+    , mCachedBitmap(nullptr)
 {
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     Gdiplus::GdiplusStartup(&mGdiplusToken, &gdiplusStartupInput, nullptr);
@@ -46,6 +47,11 @@ void EndScene::Initialize()
 {
     mBackgroundImage = new Gdiplus::Image(L"resources/EndAgario.png");
     mGameOverimage = new Gdiplus::Image(L"resources/GameOver.png");
+
+    mCachedBitmap = new Gdiplus::Bitmap(width, height);
+    Gdiplus::Graphics cacheGraphics(mCachedBitmap);
+    cacheGraphics.DrawImage(mBackgroundImage, 0, 0, width, height);
+    cacheGraphics.DrawImage(mGameOverimage, width / 2 - 330, height / 2 - 270, 237 * 3, 114 * 3);
 }
 
 void EndScene::Update()
@@ -65,22 +71,17 @@ void EndScene::LateUpdate()
 
 void EndScene::Render(HDC hdc)
 {
-    Scene::Render(hdc);
     Gdiplus::Graphics graphics(hdc);
     if (graphics.GetLastStatus() != Gdiplus::Ok) {
         std::wcout << L"Graphics creation failed" << std::endl;
         return;
     }
 
-    // 배경 이미지 렌더링
-    if (mBackgroundImage && mBackgroundImage->GetLastStatus() == Gdiplus::Ok) {
-        graphics.DrawImage(mBackgroundImage, 0, 0, width, height);
-    }
-    else {
-        std::wcout << L"Background image not loaded" << std::endl;
-    }
+    graphics.DrawImage(mCachedBitmap, 0, 0);
 
-    graphics.DrawImage(mGameOverimage, width / 2 - 330, height / 2 - 270, 237 * 3, 114 * 3);
+  
+
+    
 
     // 폰트 및 브러시 설정
     Gdiplus::Font font(L"Arial", 40, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);

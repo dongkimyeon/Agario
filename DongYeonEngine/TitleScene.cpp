@@ -18,6 +18,7 @@ TitleScene::TitleScene()
     , startButton({ static_cast<LONG>(width / 2 - 100), static_cast<LONG>(height / 2 + 120), static_cast<LONG>(width / 2 + 133), static_cast<LONG>(height / 2 + 190) })
     , ExitButton({ static_cast<LONG>(width / 2 - 90), static_cast<LONG>(height / 2 + 220), static_cast<LONG>(width / 2 + 115), static_cast<LONG>(height / 2 + 290) })
     , mGdiplusToken(0)
+    , mCachedBitmap(nullptr)
 {
     // GDI+ 초기화
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -74,7 +75,15 @@ void TitleScene::Initialize()
     mGameStartImage2 = new Gdiplus::Image(L"resources/GameStartButton2.png");
     mExitImage1 = new Gdiplus::Image(L"resources/ExitButton1.png");
     mExitImage2 = new Gdiplus::Image(L"resources/ExitButton2.png");
+
+    mCachedBitmap = new Gdiplus::Bitmap(width, height);
+    Gdiplus::Graphics cacheGraphics(mCachedBitmap);
+    cacheGraphics.DrawImage(mBackgroundImage, 0, 0, width, height);
+    cacheGraphics.DrawImage(mLogoImage, width / 2 - 330, height / 2 - 200, 237 * 3, 114 * 3);
 }
+
+
+
 
 void TitleScene::Update()
 {
@@ -113,9 +122,8 @@ void TitleScene::Render(HDC hdc)
     
     Gdiplus::Graphics graphics(hdc);
 
-    graphics.DrawImage(mBackgroundImage, 0, 0, width, height);
+    graphics.DrawImage(mCachedBitmap, 0, 0);
 
-    graphics.DrawImage(mLogoImage, width / 2 - 330, height / 2 - 200, 237 * 3, 114 * 3);
     // 게임 시작 버튼 이미지 선택
     if (GameStartButtonCheck)
         graphics.DrawImage(mGameStartImage2, width / 2 - 100, height / 2 + 100, 237, 114);
@@ -123,16 +131,10 @@ void TitleScene::Render(HDC hdc)
         graphics.DrawImage(mGameStartImage1, width / 2 - 100, height / 2 + 100, 237, 114);
 
     // 종료 버튼 이미지 선택
-    if (ExitButtonCheck)
+   if (ExitButtonCheck)
         graphics.DrawImage(mExitImage2, width / 2 - 100, height / 2 + 200, 237, 114);
     else
         graphics.DrawImage(mExitImage1, width / 2 - 100, height / 2 + 200, 237, 114);
 
-    // 랜덤 색상의 원 그리기
-    int r = rand() % 256; // 0~255
-    int g = rand() % 256;
-    int b = rand() % 256;
-    Gdiplus::SolidBrush brush(Gdiplus::Color(255, r, g, b));
-    graphics.FillEllipse(&brush, width / 2 - 50, height / 2 - 50, 100, 100); // 중앙에 반지름 50px 원
-
+    Time::Render(hdc);
 }

@@ -73,7 +73,7 @@ void Trap::LateUpdate()
 void Trap::Render(Gdiplus::Graphics& graphics)
 {
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-    graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+    //graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
 
     // 색상 설정
     Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));

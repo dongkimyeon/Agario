@@ -23,7 +23,7 @@ private:
     bool ExitButtonCheck;
     RECT ExitButton;
 	RECT startButton; 
-    
+    Gdiplus::Bitmap* mCachedBitmap;
     ULONG_PTR mGdiplusToken;         // GDI+ ÅäÅ«
 
 };

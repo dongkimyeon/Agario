@@ -115,14 +115,14 @@ void Jumbo::Render(Gdiplus::Graphics& graphics)
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
     // 플레이어 감지 범위 원 그리기
-    {
-        // 반투명한 빨간색 원으로 감지 범위 시각화
-        SolidBrush detectBrush(Color(50, 255, 0, 0)); // ARGB: 50% 투명도, 빨간색
-        Pen detectPen(Color(255, 255, 0, 0), 1); // 감지 범위 테두리 (불투명 빨간색)
-        float detectDiameter = playerDetectRadius * 2;
-        graphics.FillEllipse(&detectBrush, mX - playerDetectRadius, mY - playerDetectRadius, detectDiameter, detectDiameter);
-        graphics.DrawEllipse(&detectPen, mX - playerDetectRadius, mY - playerDetectRadius, detectDiameter, detectDiameter);
-    }
+    //{
+    //    // 반투명한 빨간색 원으로 감지 범위 시각화
+    //    SolidBrush detectBrush(Color(50, 255, 0, 0)); // ARGB: 50% 투명도, 빨간색
+    //    Pen detectPen(Color(255, 255, 0, 0), 1); // 감지 범위 테두리 (불투명 빨간색)
+    //    float detectDiameter = playerDetectRadius * 2;
+    //    graphics.FillEllipse(&detectBrush, mX - playerDetectRadius, mY - playerDetectRadius, detectDiameter, detectDiameter);
+    //    graphics.DrawEllipse(&detectPen, mX - playerDetectRadius, mY - playerDetectRadius, detectDiameter, detectDiameter);
+    //}
 
     // Jumbo 본체 (삼각형) 그리기
     Color gdiBrushColor(GetRValue(color), GetGValue(color), GetBValue(color));
