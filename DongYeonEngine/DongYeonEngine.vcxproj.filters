@@ -84,6 +84,12 @@
     <ClInclude Include="EndScene.h">
       <Filter>Scenes</Filter>
     </ClInclude>
+    <ClInclude Include="BlackHole.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="WhiteHole.h">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -142,6 +148,12 @@
     </ClCompile>
     <ClCompile Include="EndScene.cpp">
       <Filter>Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="BlackHole.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="WhiteHole.cpp">
+      <Filter>Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,8 @@
 #include "Enemy.h"
 #include "Trap.h"
 #include "Jumbo.h"
-
+#include "BlackHole.h"
+#include "WhiteHole.h"
 #include "SceneManager.h"
 
 class PlayScene : public Scene
@@ -28,7 +29,8 @@ private:
     std::vector<Trap> traps;
     std::vector<Jumbo> jumbos;
     std::vector<Player> player;
-
+    BlackHole blackhole;
+    WhiteHole whitehole;
 	Gdiplus::Image* mWarnningImage;
     Gdiplus::Image* mWarnningImage2;
 	Gdiplus::Image* mWarnningImage3;

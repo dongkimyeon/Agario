@@ -19,6 +19,7 @@ private:
     Gdiplus::Bitmap* mCachedBitmap;
     ULONG_PTR mGdiplusToken;         // GDI+ 토큰
 
-
+    float mAnimationTime; // 현재 애니메이션 시간
+    float mAnimationDuration; // 애니메이션 지속 시간
 
 };

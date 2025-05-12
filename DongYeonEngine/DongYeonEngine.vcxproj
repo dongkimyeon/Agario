@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BlackHole.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EndScene.h" />
     <ClInclude Include="Enemy.h" />
@@ -146,8 +147,10 @@
     <ClInclude Include="Time.h" />
     <ClInclude Include="TitleScene.h" />
     <ClInclude Include="Trap.h" />
+    <ClInclude Include="WhiteHole.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BlackHole.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="EndScene.cpp" />
     <ClCompile Include="Enemy.cpp" />
@@ -167,6 +170,7 @@
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="TitleScene.cpp" />
     <ClCompile Include="Trap.cpp" />
+    <ClCompile Include="WhiteHole.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DongYeonEngine.rc" />

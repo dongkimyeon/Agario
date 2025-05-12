@@ -170,21 +170,24 @@ void PlayScene::Reset()
         obj.SetPosition(x, y);
         jumbos.push_back(obj);
     }
-
+  
+        
+    
     // 플레이어 객체 초기화
     Player obj;
     obj.SetPosition(800, 400);
     player.push_back(obj);
 
-
     
+    blackhole.SetPosition(1500, 750);
+    whitehole.SetPosition(20, 20);
 
     // 카메라 초기화 추가
     if (!player.empty()) {
         mCameraX = player[0].GetPositionX();
         mCameraY = player[0].GetPositionY();
     }
-    mZoomScale = 1.5f; // 기본 2배 확대
+    mZoomScale = 1.0f; // 기본 2배 확대
 
     mCamType = true;
    
@@ -196,7 +199,7 @@ void PlayScene::Update()
    
     if (mCamType)
     {
-        mZoomScale = 1.2f;
+        mZoomScale = 1.0f;
     }
     else
     {
@@ -208,7 +211,7 @@ void PlayScene::Update()
         }
         if (Input::GetKeyDown(eKeyCode::WheelDown)) {
             mZoomScale -= 0.1f; // 줌 아웃
-            if (mZoomScale < 1.2f) mZoomScale = 1.2f; 
+            if (mZoomScale < 1.0f) mZoomScale = 1.0f; 
             std::cout << "Zoom Out: mZoomScale = " << mZoomScale << std::endl;
         }
     }
@@ -861,7 +864,19 @@ void PlayScene::Update()
             }
         }
     }
+    // 플레이어 블랙홀
+    if (!player.empty())
+    {
+        float dx = player[0].GetPositionX() - blackhole.GetPositionX();
+        float dy = player[0].GetPositionY() - blackhole.GetPositionY();
+        float distance = std::sqrt(dx * dx + dy * dy);
+        float radiusSum = player[0].GetRadius() + blackhole.GetRadius();
 
+        if (distance <= radiusSum)
+        {
+            player[0].SetPosition(whitehole.GetPositionX(), whitehole.GetPositionY());
+        }
+    }
    
     for (auto it = player.begin(); it != player.end(); ++it) {
         it->Update(mZoomScale, mCameraX, mCameraY, 1600, 800);
@@ -886,8 +901,8 @@ void PlayScene::Update()
     for (auto it = jumbos.begin(); it != jumbos.end(); ++it) {
         it->Update(player);
     }
-
-
+    blackhole.Update();
+    whitehole.Update();
     if (!player.empty()) {
         mCameraX = player[0].GetPositionX();
         mCameraY = player[0].GetPositionY();
@@ -958,29 +973,42 @@ void PlayScene::Render(HDC hdc)
     }
 
     // 느낌표 이미지 렌더링
-    INT size = 100;
-    if (showExclamation && trapSpawnTimer >= 8.0f && trapSpawnTimer <= 8.4f) {
-        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
-        graphics.DrawImage(mWarnningImage, rect);
-    }
-    if (showExclamation && trapSpawnTimer > 8.4f && trapSpawnTimer <= 8.8f) {
-        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
-        graphics.DrawImage(mWarnningImage2, rect);
-    }
-    if (showExclamation && trapSpawnTimer > 8.8f && trapSpawnTimer <= 9.2f) {
-        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
-        graphics.DrawImage(mWarnningImage3, rect);
-    }
-    if (showExclamation && trapSpawnTimer > 9.2f && trapSpawnTimer <= 9.6f) {
-        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
-        graphics.DrawImage(mWarnningImage4, rect);
-    }
-    if (showExclamation && trapSpawnTimer > 9.6f && trapSpawnTimer <= 10.0f) {
-        Gdiplus::RectF rect(exclamationX - 25, exclamationY - 25, size, size);
-        graphics.DrawImage(mWarnningImage5, rect);
+   // 느낌표 이미지 렌더링
+    if (showExclamation && trapSpawnTimer >= 8.0f && trapSpawnTimer <= 10.0f) {
+        Gdiplus::Image* warningImage = nullptr;
+      
+        float cycleTime = trapSpawnTimer - 8.0f;
+        int imageIndex = static_cast<int>(cycleTime / 0.2f) % 5; // 0.4초마다 이미지 변경
+
+        switch (imageIndex) {
+        case 0: warningImage = mWarnningImage; break;
+        case 1: warningImage = mWarnningImage2; break;
+        case 2: warningImage = mWarnningImage3; break;
+        case 3: warningImage = mWarnningImage4; break;
+        case 4: warningImage = mWarnningImage5; break;
+        }
+
+        if (warningImage && warningImage->GetLastStatus() == Gdiplus::Ok) {
+         
+            float imgWidth = static_cast<float>(warningImage->GetWidth() - 100);
+            float imgHeight = static_cast<float>(warningImage->GetHeight() - 100);
+
+            // 중앙을 기준으로 렌더링
+            Gdiplus::RectF rect(
+                exclamationX - imgWidth / 2.0f,  
+                exclamationY - imgHeight / 2.0f, 
+                imgWidth,
+                imgHeight
+            );
+            graphics.DrawImage(warningImage, rect);
+        }
     }
 
     // 오브젝트 렌더링
+    blackhole.Render(graphics);
+    whitehole.Render(graphics);
+
+
     for (auto& p : player) {
         p.Render(graphics);
     }
@@ -996,7 +1024,7 @@ void PlayScene::Render(HDC hdc)
     for (auto& j : jumbos) {
         j.Render(graphics);
     }
-
+   
     // 텍스트 렌더링 (카메라 변환 해제)
     graphics.ResetTransform();
     Gdiplus::Font font(L"Arial", 25, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
@@ -1005,7 +1033,7 @@ void PlayScene::Render(HDC hdc)
         return;
     }
 
-    graphics.ResetTransform();
+  
     if (mZoomtogleImage) {
         Gdiplus::RectF rect(1550.0f, 0, 50.0f, 50.0f); // 우측 상단
         graphics.DrawImage(mZoomtogleImage, rect);
